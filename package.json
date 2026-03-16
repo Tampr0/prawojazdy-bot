@@ -1,0 +1,19 @@
+{
+  "name": "prawojazdy-bot",
+  "version": "1.0.0",
+  "description": "Prosty bot do monitorowania terminow egzaminu prawa jazdy.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "node-telegram-bot-api": "^0.67.0",
+    "playwright": "^1.58.2"
+  }
+}
