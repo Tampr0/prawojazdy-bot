@@ -1,9 +1,7 @@
-function parseAppointments(pageContent, logger) {
-  logger.debug("Parsing page content with placeholder parser.");
-
+function parseAppointments() {
   return {
-    availableSlots: [],
-    rawContentLength: pageContent.length,
+    slots: [],
+    message: "Mock parser result",
   };
 }
 

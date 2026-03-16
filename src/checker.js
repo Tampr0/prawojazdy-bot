@@ -1,5 +1,5 @@
 const { chromium, firefox, webkit } = require("playwright");
-const { parseAppointments } = require("./parser");
+const { logInfo } = require("./logger");
 
 const browsers = {
   chromium,
@@ -11,35 +11,21 @@ function resolveBrowser(browserName) {
   return browsers[browserName] || chromium;
 }
 
-async function runCheck(config, state, logger) {
+async function runCheck(config) {
   const browserType = resolveBrowser(config.browserName);
   const browser = await browserType.launch({ headless: config.headless });
-
-  logger.info("Starting availability check.", {
-    browser: config.browserName,
-    headless: config.headless,
-  });
+  let page;
 
   try {
-    const page = await browser.newPage();
+    page = await browser.newPage();
+    await page.goto(config.targetUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
 
-    if (config.targetUrl) {
-      logger.info("Target URL configured, opening placeholder page.", {
-        targetUrl: config.targetUrl,
-      });
-      await page.goto(config.targetUrl, { waitUntil: "domcontentloaded" });
-    } else {
-      logger.warn("TARGET_URL is empty. Using inline placeholder content.");
-      await page.setContent("<html><body><h1>Placeholder</h1></body></html>");
-    }
-
-    const pageContent = await page.content();
-    const parsedResult = parseAppointments(pageContent, logger);
+    const pageTitle = await page.title();
+    logInfo(`Tytul strony: ${pageTitle}`);
 
     return {
-      ...parsedResult,
+      pageTitle,
       checkedAt: new Date().toISOString(),
-      previousState: state,
     };
   } finally {
     await browser.close();

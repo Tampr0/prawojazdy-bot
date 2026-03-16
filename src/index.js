@@ -1,39 +1,35 @@
 const { loadConfig } = require("./config");
 const { runCheck } = require("./checker");
+const { parseAppointments } = require("./parser");
 const { notify } = require("./notify");
-const { createLogger } = require("./logger");
+const { logInfo, logError } = require("./logger");
 const { loadState, saveState } = require("./storage");
 
 async function main() {
-  const config = loadConfig();
-  const logger = createLogger(config.logLevel);
-  const state = await loadState(config.stateFilePath, logger);
+  try {
+    const config = loadConfig();
+    const currentState = await loadState(config.stateFilePath);
 
-  logger.info("Application started.", {
-    stateFilePath: config.stateFilePath,
-    dryRun: config.dryRun,
-  });
+    logInfo("Start aplikacji.");
 
-  const result = await runCheck(config, state, logger);
+    const checkResult = await runCheck(config);
+    const parsedResult = parseAppointments();
 
-  const nextState = {
-    ...state,
-    lastCheckedAt: result.checkedAt,
-    lastResult: result,
-  };
+    const nextState = {
+      ...currentState,
+      lastCheckedAt: checkResult.checkedAt,
+      lastPageTitle: checkResult.pageTitle,
+      lastResult: parsedResult,
+    };
 
-  await saveState(config.stateFilePath, nextState, logger);
+    await saveState(config.stateFilePath, nextState);
+    await notify(`Sprawdzanie zakonczone. Znaleziono ${parsedResult.slots.length} terminow.`);
 
-  if (!config.dryRun) {
-    await notify(result, config, logger);
-  } else {
-    logger.info("Dry run enabled, skipping notifications.");
+    logInfo("Koniec pracy.");
+  } catch (error) {
+    logError("Aplikacja zakonczyla sie bledem.", error);
+    process.exitCode = 1;
   }
-
-  logger.info("Application finished.");
 }
 
-main().catch((error) => {
-  console.error(`[FATAL] ${error.message}`);
-  process.exitCode = 1;
-});
+main();

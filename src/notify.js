@@ -1,8 +1,7 @@
-async function notify(result, config, logger) {
-  logger.info("Notification placeholder executed.", {
-    channel: config.notificationChannel,
-    slotsFound: result.availableSlots.length,
-  });
+const { logInfo } = require("./logger");
+
+async function notify(message) {
+  logInfo(`Powiadomienie mock: ${message}`);
 }
 
 module.exports = {
