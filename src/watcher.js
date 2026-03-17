@@ -6,6 +6,7 @@ const { saveJson } = require("./storage");
 
 const POLL_INTERVAL_MS = 20000;
 const RANGE_DAYS = 60;
+const MAX_LOGGED_TERMS = 10;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -45,7 +46,24 @@ function getPracticalTerms(responseData, payload) {
     }
   }
 
-  return practicalTerms.filter((term) => term.examType === "PRACTICAL");
+  return practicalTerms
+    .filter((term) => term.examType === "PRACTICAL")
+    .sort((firstTerm, secondTerm) => {
+      const firstDate = new Date(firstTerm.date).getTime();
+      const secondDate = new Date(secondTerm.date).getTime();
+
+      return firstDate - secondDate;
+    });
+}
+
+function formatTermDate(term) {
+  const date = new Date(term.date);
+
+  if (Number.isNaN(date.getTime())) {
+    return `${term.date || "brak-daty"} ${String(term.time || "").slice(0, 5)}`.trim();
+  }
+
+  return date.toISOString().slice(0, 16).replace("T", " ");
 }
 
 async function runWatcher() {
@@ -65,8 +83,10 @@ async function runWatcher() {
       } else {
         logInfo(`Znaleziono ${practicalTerms.length} terminow praktycznych.`);
 
-        for (const term of practicalTerms) {
-          logInfo(`Data: ${term.date}, godzina: ${term.time}, wordId: ${term.wordId}`);
+        const nearestTerms = practicalTerms.slice(0, MAX_LOGGED_TERMS);
+
+        for (const term of nearestTerms) {
+          logInfo(`${formatTermDate(term)} | wordId: ${term.wordId}`);
         }
       }
 
