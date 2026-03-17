@@ -43,6 +43,8 @@ async function selectOption(page, text, timeout = 30000) {
     }
   }
 
+  const allOptions = await page.locator('text=Egzamin').allTextContents();
+  console.log('DEBUG OPTIONS:', allOptions);
   throw new Error(`Nie znaleziono opcji: ${text}`);
 }
 
@@ -67,11 +69,26 @@ async function runBooker() {
 
     await clickByText(page, "Prawo jazdy");
     await clickByText(page, "Sprawdź dostępność");
-    await selectOption(page, "PKK");
-    await selectOption(page, "dolnośląskie");
-    await selectOption(page, "Wrocław");
-    await selectOption(page, "kategoria B");
-    await selectOption(page, "praktyka");
+    //await selectOption(page, "Egzamin na prawo jazdy (PKK)");
+    await page.getByText('Egzamin na prawo jazdy (PKK)', { exact: true })
+      .locator('..')
+      .click();
+
+    await page.getByPlaceholder('Wybierz województwo').click();
+    await page.getByText('dolnośląskie', { exact: false }).click();
+    
+    await page.getByPlaceholder('Wybierz ośrodek egzaminacyjny').click();
+    await page.getByText('WORD Wrocław', { exact: false }).click();
+
+    await page.getByPlaceholder('Wybierz kategorię').click();
+    await page.getByText('B', { exact: true }).click();
+
+    await page.getByRole('button', { name: 'Dalej' }).click();
+    
+    await page.locator('input[type="radio"]').nth(1).click();
+
+    await page.getByRole('button', { name: 'Wybierz' }).first().click();
+    await page.getByRole('button', { name: 'Dalej' }).click();
 
     const chooseButton = await waitForTerms(page, 60000);
     await chooseButton.click();
