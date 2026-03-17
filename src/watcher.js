@@ -63,7 +63,20 @@ function formatTermDate(term) {
     return `${term.date || "brak-daty"} ${String(term.time || "").slice(0, 5)}`.trim();
   }
 
-  return date.toISOString().slice(0, 16).replace("T", " ");
+  const localDateTime = date.toLocaleString("pl-PL", {
+    timeZone: "Europe/Warsaw",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const [datePart, timePart] = localDateTime.split(", ");
+  const [day, month, year] = datePart.split(".");
+
+  return `${year}-${month}-${day} ${timePart}`;
 }
 
 async function runWatcher() {
