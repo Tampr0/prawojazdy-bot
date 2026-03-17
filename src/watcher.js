@@ -1,3 +1,4 @@
+const fs = require("fs/promises");
 const { loadConfig } = require("./config");
 const { fetchSchedule } = require("./checker");
 const { logInfo, logError } = require("./logger");
@@ -91,9 +92,39 @@ function buildSlotKey(slot) {
   return key;
 }
 
+async function loadSeenSlots(filePath) {
+  try {
+    const content = await fs.readFile(filePath, "utf8");
+    const parsed = JSON.parse(content);
+
+    if (!Array.isArray(parsed)) {
+      return new Set();
+    }
+
+    return new Set(parsed.filter((item) => typeof item === "string"));
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return new Set();
+    }
+
+    throw error;
+  }
+}
+
+async function saveSeenSlots(filePath, slotsSet) {
+  await saveJson(filePath, Array.from(slotsSet));
+}
+
 async function runWatcher() {
   const config = loadConfig();
   const session = await loadSession(config.sessionFilePath);
+  const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
+
+  sentSlots.clear();
+
+  for (const slotKey of loadedSlots) {
+    sentSlots.add(slotKey);
+  }
 
   logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
 
@@ -125,6 +156,8 @@ async function runWatcher() {
           for (const term of nearestTerms) {
             sentSlots.add(buildSlotKey(term));
           }
+
+          await saveSeenSlots(config.seenSlotsFilePath, sentSlots);
         }
       }
 

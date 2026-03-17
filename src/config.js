@@ -21,6 +21,10 @@ function loadConfig() {
     userDataDir: path.resolve(process.cwd(), process.env.USER_DATA_DIR || "user-data"),
     stateFilePath: path.resolve(process.cwd(), process.env.STATE_FILE || "state.json"),
     sessionFilePath: path.resolve(process.cwd(), process.env.SESSION_FILE || "session.json"),
+    seenSlotsFilePath: path.resolve(
+      process.cwd(),
+      process.env.SEEN_SLOTS_FILE || "seen-slots.json"
+    ),
     debugSlotsFilePath: path.resolve(
       process.cwd(),
       process.env.DEBUG_SLOTS_FILE || "debug-slots.json"
