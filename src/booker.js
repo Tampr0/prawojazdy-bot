@@ -3,6 +3,7 @@ const { chromium } = require("playwright");
 
 const START_URL = "https://info-car.pl";
 const USER_DATA_DIR = path.resolve(process.cwd(), "user-data");
+const KEEP_BROWSER_OPEN = true;
 
 async function clickByText(page, text, timeout = 30000) {
   const candidates = [
@@ -66,36 +67,41 @@ async function runBooker() {
 
   try {
     await page.goto(START_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
+    // NAV
+  await clickByText(page, "Prawo jazdy");
+  await clickByText(page, "Sprawdź dostępność");
 
-    await clickByText(page, "Prawo jazdy");
-    await clickByText(page, "Sprawdź dostępność");
-    //await selectOption(page, "Egzamin na prawo jazdy (PKK)");
-    await page.getByText('Egzamin na prawo jazdy (PKK)', { exact: true })
-      .locator('..')
-      .click();
+  // PKK
+  await page.getByText('Egzamin na prawo jazdy (PKK)', { exact: true })
+    .locator('..')
+    .click();
 
-    await page.getByPlaceholder('Wybierz województwo').click();
-    await page.getByText('dolnośląskie', { exact: false }).click();
-    
-    await page.getByPlaceholder('Wybierz ośrodek egzaminacyjny').click();
-    await page.getByText('WORD Wrocław', { exact: false }).click();
+  // FORM
+  await page.getByPlaceholder('Wybierz województwo').click();
+  await page.getByText('dolnośląskie', { exact: false }).click();
+  await page.getByPlaceholder('Wybierz ośrodek egzaminacyjny').click();
+  await page.getByRole('button', { name: 'WORD Wrocław' }).click();
+  await page.getByPlaceholder('Wybierz kategorię').click();
+  await page.getByText('B', { exact: true }).click();
+  await page.getByRole('button', { name: 'Dalej' }).click();
 
-    await page.getByPlaceholder('Wybierz kategorię').click();
-    await page.getByText('B', { exact: true }).click();
+  // PRAKTYKA
+  await page.locator('input[type="radio"]').nth(1).click();
 
-    await page.getByRole('button', { name: 'Dalej' }).click();
-    
-    await page.locator('input[type="radio"]').nth(1).click();
+  // WAIT FOR TERMS
+  await page.waitForSelector('text=Wybierz', { timeout: 120000 });
 
-    await page.getByRole('button', { name: 'Wybierz' }).first().click();
-    await page.getByRole('button', { name: 'Dalej' }).click();
+  // CLICK FIRST SLOT
+  await page.getByRole('button', { name: 'Wybierz' }).first().click();
 
-    const chooseButton = await waitForTerms(page, 60000);
-    await chooseButton.click();
+  // CONFIRM MODAL
+  await page.getByRole('button', { name: 'Dalej' }).click();
 
     console.log("BOOKING ATTEMPTED");
   } finally {
-    await context.close();
+    if (!KEEP_BROWSER_OPEN) {
+  await context.close();
+}
   }
 }
 
