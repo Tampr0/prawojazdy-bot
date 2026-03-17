@@ -1,15 +1,19 @@
 const fs = require("fs/promises");
 const { loadConfig } = require("./config");
 const { fetchSchedule } = require("./checker");
+const { runBooker } = require("./booker");
 const { logInfo, logError } = require("./logger");
 const { loadSession } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 
+// const FORCE_BOOKING = true;
+
 const POLL_INTERVAL_MS = 20000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
 const sentSlots = new Set();
+let bookingInProgress = false;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -87,6 +91,18 @@ function buildTelegramMessage(terms) {
   return `ZNALEZIONO TERMINY:\n${lines.join("\n")}`;
 }
 
+async function notify(slots) {
+  const nearestTerms = slots.slice(0, MAX_LOGGED_TERMS);
+
+  for (const term of nearestTerms) {
+    logInfo(`${formatTermDate(term)} | wordId: ${term.wordId}`);
+  }
+
+  await sendTelegramMessage(buildTelegramMessage(nearestTerms));
+
+  return nearestTerms;
+}
+
 function buildSlotKey(slot) {
   const key = `${slot.dateTime}_${slot.wordId}_${slot.examType}`;
   return key;
@@ -145,19 +161,29 @@ async function runWatcher() {
         if (newSlots.length === 0) {
           logInfo("Brak nowych slotow do wyslania.");
         } else {
-          const nearestTerms = newSlots.slice(0, MAX_LOGGED_TERMS);
+          const notifiedSlots = await notify(newSlots);
+        // if (newSlots.length === 0 && !FORCE_BOOKING) {
+        //   logInfo("Brak nowych slotow do wyslania.");
+        //   } else {
+        //     const notifiedSlots = await notify(newSlots.length > 0 ? newSlots : practicalTerms);
 
-          for (const term of nearestTerms) {
-            logInfo(`${formatTermDate(term)} | wordId: ${term.wordId}`);
-          }
-
-          await sendTelegramMessage(buildTelegramMessage(nearestTerms));
-
-          for (const term of nearestTerms) {
+          for (const term of notifiedSlots) {
             sentSlots.add(buildSlotKey(term));
           }
 
           await saveSeenSlots(config.seenSlotsFilePath, sentSlots);
+
+          if (!bookingInProgress) {
+            bookingInProgress = true;
+
+            try {
+              await runBooker();
+            } catch (err) {
+              console.error("BOOKING ERROR:", err);
+            } finally {
+              bookingInProgress = false;
+            }
+          }
         }
       }
 
