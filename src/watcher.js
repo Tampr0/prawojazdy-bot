@@ -3,6 +3,7 @@ const { fetchSchedule } = require("./checker");
 const { logInfo, logError } = require("./logger");
 const { loadSession } = require("./session");
 const { saveJson } = require("./storage");
+const { sendTelegramMessage } = require("./notifier");
 
 const POLL_INTERVAL_MS = 20000;
 const RANGE_DAYS = 60;
@@ -79,6 +80,11 @@ function formatTermDate(term) {
   return `${year}-${month}-${day} ${timePart}`;
 }
 
+function buildTelegramMessage(terms) {
+  const lines = terms.map((term) => formatTermDate(term));
+  return `ZNALEZIONO TERMINY:\n${lines.join("\n")}`;
+}
+
 async function runWatcher() {
   const config = loadConfig();
   const session = await loadSession(config.sessionFilePath);
@@ -101,6 +107,8 @@ async function runWatcher() {
         for (const term of nearestTerms) {
           logInfo(`${formatTermDate(term)} | wordId: ${term.wordId}`);
         }
+
+        await sendTelegramMessage(buildTelegramMessage(nearestTerms));
       }
 
       await saveJson(config.debugSlotsFilePath, practicalTerms);
