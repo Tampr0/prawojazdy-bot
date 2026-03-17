@@ -26,8 +26,13 @@ async function saveState(stateFilePath, state) {
   await fs.writeFile(stateFilePath, payload, "utf8");
 }
 
+async function saveJson(filePath, data) {
+  await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
+}
+
 module.exports = {
   loadState,
   saveState,
+  saveJson,
   createDefaultState,
 };
