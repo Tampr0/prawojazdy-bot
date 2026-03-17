@@ -86,8 +86,9 @@ function buildTelegramMessage(terms) {
   return `ZNALEZIONO TERMINY:\n${lines.join("\n")}`;
 }
 
-function buildSlotKey(term) {
-  return `${term.date}_${term.wordId}`;
+function buildSlotKey(slot) {
+  const key = `${slot.dateTime}_${slot.wordId}_${slot.examType}`;
+  return key;
 }
 
 async function runWatcher() {
@@ -107,12 +108,13 @@ async function runWatcher() {
       } else {
         logInfo(`Znaleziono ${practicalTerms.length} terminow praktycznych.`);
 
-        const newTerms = practicalTerms.filter((term) => !sentSlots.has(buildSlotKey(term)));
+        const newSlots = practicalTerms.filter((slot) => !sentSlots.has(buildSlotKey(slot)));
+        console.log("NEW SLOTS:", newSlots.length);
 
-        if (newTerms.length === 0) {
+        if (newSlots.length === 0) {
           logInfo("Brak nowych slotow do wyslania.");
         } else {
-          const nearestTerms = newTerms.slice(0, MAX_LOGGED_TERMS);
+          const nearestTerms = newSlots.slice(0, MAX_LOGGED_TERMS);
 
           for (const term of nearestTerms) {
             logInfo(`${formatTermDate(term)} | wordId: ${term.wordId}`);
