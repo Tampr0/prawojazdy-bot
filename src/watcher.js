@@ -3,7 +3,7 @@ const { loadConfig } = require("./config");
 const { fetchSchedule } = require("./checker");
 const { runBooker } = require("./booker");
 const { logInfo, logError } = require("./logger");
-const { loadSession } = require("./session");
+const { ensureSession } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 
@@ -133,7 +133,7 @@ async function saveSeenSlots(filePath, slotsSet) {
 
 async function runWatcher() {
   const config = loadConfig();
-  const session = await loadSession(config.sessionFilePath);
+  let session = await ensureSession(config);
   const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
 
   sentSlots.clear();
@@ -189,6 +189,12 @@ async function runWatcher() {
 
       await saveJson(config.debugSlotsFilePath, practicalTerms);
     } catch (error) {
+      if (String(error?.message || error).includes("401")) {
+        logInfo("SESSION EXPIRED");
+        session = await ensureSession(config, { forceRefresh: true });
+        continue;
+      }
+
       logError("Blad podczas pobierania terminarza.", error);
     }
 

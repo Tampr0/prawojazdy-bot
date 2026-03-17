@@ -5,6 +5,15 @@ const START_URL = "https://info-car.pl";
 const USER_DATA_DIR = path.resolve(process.cwd(), "user-data");
 const KEEP_BROWSER_OPEN = true;
 
+async function launchBrowserContext() {
+  return chromium.launchPersistentContext(USER_DATA_DIR, {
+    channel: "chrome",
+    headless: false,
+    viewport: null,
+    args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
+  });
+}
+
 async function clickByText(page, text, timeout = 30000) {
   const candidates = [
     page.getByRole("link", { name: new RegExp(text, "i") }).first(),
@@ -56,12 +65,7 @@ async function waitForTerms(page, timeout = 30000) {
 }
 
 async function runBooker() {
-  const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
-    channel: "chrome",
-    headless: false,
-    viewport: null,
-    args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
-  });
+  const context = await launchBrowserContext();
 
   const page = context.pages()[0] || (await context.newPage());
 
@@ -106,6 +110,7 @@ async function runBooker() {
 }
 
 module.exports = {
+  launchBrowserContext,
   runBooker,
 };
 
