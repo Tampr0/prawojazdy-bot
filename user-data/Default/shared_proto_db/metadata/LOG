@@ -1,2 +1,3 @@
-2026/03/17-09:40:48.578 4090 Creating DB C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\shared_proto_db\metadata since it was missing.
-2026/03/17-09:40:48.630 4090 Reusing MANIFEST C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\shared_proto_db\metadata/MANIFEST-000001
+2026/03/17-10:52:03.896 2390 Reusing MANIFEST C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\shared_proto_db\metadata/MANIFEST-000001
+2026/03/17-10:52:03.897 2390 Recovering log #3
+2026/03/17-10:52:03.897 2390 Reusing old log C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\shared_proto_db\metadata/000003.log 
