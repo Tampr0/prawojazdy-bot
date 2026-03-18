@@ -207,8 +207,9 @@ async function runWatcher() {
           logInfo("Brak nowych slotow");
         } else {
           const notifiedSlots = await notify(newSlots);
+          const slotsToSave = newSlots; // KLUCZOWE
 
-          for (const term of notifiedSlots) {
+          for (const term of slotsToSave) {
             sentSlots.add(buildSlotKey(term));
           }
 
