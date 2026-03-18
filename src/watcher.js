@@ -8,6 +8,7 @@ const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 
 const FORCE_BOOKING = false; // true dla testów
+const DEBUG = false;
 
 const POLL_INTERVAL_MS = 20000;
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
@@ -106,9 +107,7 @@ async function notify(slots) {
 }
 
 function buildSlotKey(slot) {
-  const key = slot.time
-    ? `${slot.date}_${slot.time}_${slot.wordId}_${slot.examType}`
-    : `${slot.date}_${slot.wordId}_${slot.examType}`;
+  const key = `${slot.date}_${slot.wordId}_${slot.examType}`;
   console.log("SLOT KEY:", key);
   return key;
 }
@@ -117,9 +116,9 @@ function getEarliestTimestampFromSet(slotsSet) {
   const timestamps = [];
 
   for (const key of slotsSet) {
-    const [date, time] = key.split("_");
+    const [date] = key.split("_");
 
-    const ts = new Date(`${date}T${time}`).getTime();
+    const ts = new Date(date).getTime();
     if (!Number.isNaN(ts)) {
       timestamps.push(ts);
     }
@@ -129,7 +128,11 @@ function getEarliestTimestampFromSet(slotsSet) {
 }
 
 function getSlotTimestamp(slot) {
-  return new Date(`${slot.date}T${slot.time}`).getTime();
+  if (DEBUG) {
+  console.log("TIMESTAMP:", new Date(slot.date).getTime());
+}
+  // console.log("TIMESTAMP:", new Date(slot.date).getTime());
+  // return new Date(slot.date).getTime();
 }
 
 async function loadSeenSlots(filePath) {
