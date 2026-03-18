@@ -209,13 +209,30 @@ async function runWatcher() {
           amount: 222,
         });
       }
+      const now = Date.now();
+
+      const minTs = now + config.slotMinDays * 24 * 60 * 60 * 1000;
+      const maxTs = now + config.slotMaxDays * 24 * 60 * 60 * 1000;
+
+      const filteredByRange = practicalTerms.filter((slot) => {
+        const ts = new Date(slot.date).getTime();
+        return ts >= minTs && ts <= maxTs;
+      });
+      
       if (practicalTerms.length === 0) {
-        logInfo("Brak terminow praktycznych");
-      } else {
-        logInfo(`Znaleziono ${practicalTerms.length} terminow praktycznych.`);
+  logInfo("Brak terminow praktycznych");
+} else {
+  logInfo(`Znaleziono ${practicalTerms.length} terminow praktycznych.`);
+
+  if (filteredByRange.length === 0) {
+    logInfo("Brak slotow w zadanym zakresie dni");
+    await saveJson(config.debugSlotsFilePath, practicalTerms);
+    await sleep(POLL_INTERVAL_MS);
+    continue;
+  }
 
         if (sentSlots.size === 0) {
-          const initialSlots = practicalTerms.slice(0, 5);
+          const initialSlots = filteredByRange.slice(0, 5);
 
           for (const term of initialSlots) {
             sentSlots.add(buildSlotKey(term));
@@ -230,7 +247,7 @@ async function runWatcher() {
 
         const cutoffTs = getCutoffTimestamp(sentSlots);
 
-const newSlots = practicalTerms.filter((slot) => {
+const newSlots = filteredByRange.filter((slot) => {
   const key = buildSlotKey(slot);
 
   // jeśli już znamy → ignoruj
