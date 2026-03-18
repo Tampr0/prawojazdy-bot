@@ -7,7 +7,7 @@ const { ensureSession, getSessionPage } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 
-const FORCE_BOOKING = false; // true dla testów
+const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
 const POLL_INTERVAL_MS = 20000;
@@ -112,31 +112,6 @@ function buildSlotKey(slot) {
   return key;
 }
 
-function getEarliestTimestampFromSet(slotsSet) {
-  const timestamps = [];
-
-  for (const key of slotsSet) {
-    const [date] = key.split("_");
-
-    const ts = new Date(date).getTime();
-    if (!Number.isNaN(ts)) {
-      timestamps.push(ts);
-    }
-  }
-
-  return timestamps.length ? Math.min(...timestamps) : null;
-}
-
-function getSlotTimestamp(slot) {
-  const ts = new Date(slot.date).getTime();
-
-  if (DEBUG) {
-    console.log("TIMESTAMP:", ts);
-  }
-
-  return ts;
-}
-
 async function loadSeenSlots(filePath) {
   try {
     const content = await fs.readFile(filePath, "utf8");
@@ -207,12 +182,7 @@ async function runWatcher() {
       } else {
         logInfo(`Znaleziono ${practicalTerms.length} terminow praktycznych.`);
 
-        const earliestSavedTs = getEarliestTimestampFromSet(sentSlots);
-        console.log("EARLIEST SAVED TS:", earliestSavedTs);
-
-        let betterSlots = [];
-
-        if (!earliestSavedTs) {
+        if (sentSlots.size === 0) {
           const initialSlots = practicalTerms.slice(0, 5);
 
           for (const term of initialSlots) {
@@ -224,19 +194,19 @@ async function runWatcher() {
           await saveJson(config.debugSlotsFilePath, practicalTerms);
           await sleep(POLL_INTERVAL_MS);
           continue;
-        } else {
-          betterSlots = practicalTerms.filter((slot) => {
-            const ts = getSlotTimestamp(slot);
-            return ts < earliestSavedTs;
-          });
         }
 
-        console.log("BETTER SLOTS:", betterSlots.length);
+        const newSlots = practicalTerms.filter((slot) => {
+          const key = buildSlotKey(slot);
+          return !sentSlots.has(key);
+        });
 
-        if (betterSlots.length === 0 && !FORCE_BOOKING) {
-          logInfo("Brak wcześniejszych slotów.");
+        console.log("NEW SLOTS:", newSlots.length);
+
+        if (newSlots.length === 0 && !FORCE_BOOKING) {
+          logInfo("Brak nowych slotow");
         } else {
-          const notifiedSlots = await notify(betterSlots);
+          const notifiedSlots = await notify(newSlots);
 
           for (const term of notifiedSlots) {
             sentSlots.add(buildSlotKey(term));
