@@ -45,7 +45,7 @@ function getPracticalTerms(responseData, payload) {
         practicalTerms.push({
           examType: "PRACTICAL",
           id: exam?.id || null,
-          date: exam?.date || day?.day || null,
+          date: exam?.date || day?.date || null,
           time: hour?.time || null,
           wordId: responseData?.organizationId || payload.wordId,
           places: exam?.places ?? null,
@@ -107,7 +107,7 @@ async function notify(slots) {
 }
 
 function buildSlotKey(slot) {
-  const key = `${slot.date}_${slot.wordId}_${slot.examType}`;
+  const key = `${slot.date}_${slot.time}_${slot.wordId}_${slot.examType}`;
   console.log("SLOT KEY:", key);
   return key;
 }
@@ -128,11 +128,13 @@ function getEarliestTimestampFromSet(slotsSet) {
 }
 
 function getSlotTimestamp(slot) {
+  const ts = new Date(slot.date).getTime();
+
   if (DEBUG) {
-  console.log("TIMESTAMP:", new Date(slot.date).getTime());
-}
-  // console.log("TIMESTAMP:", new Date(slot.date).getTime());
-  // return new Date(slot.date).getTime();
+    console.log("TIMESTAMP:", ts);
+  }
+
+  return ts;
 }
 
 async function loadSeenSlots(filePath) {
