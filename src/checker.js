@@ -104,12 +104,38 @@ async function fetchSchedule(session, payload, config) {
     throw new Error(`API returned ${response.status}: ${errorText}`);
   }
 
-  return response.json();
+  const text = await response.text();
+
+  if (text.trimStart().startsWith("<")) {
+    throw new Error("SESSION_EXPIRED_HTML");
+  }
+
+  return JSON.parse(text);
+}
+
+async function fetchWithRetry(fn, retries = 3) {
+  const delaysMs = [2000, 5000, 10000];
+
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      console.log("FETCH ERROR, retry:", i + 1);
+
+      if (i === retries) {
+        throw err;
+      }
+
+      const delayMs = delaysMs[Math.min(i, delaysMs.length - 1)];
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
 }
 
 module.exports = {
   captureSession,
   fetchSchedule,
+  fetchWithRetry,
 };
 
 const { loadConfig } = require("./config");

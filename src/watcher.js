@@ -1,17 +1,19 @@
 const fs = require("fs/promises");
 const { loadConfig } = require("./config");
-const { fetchSchedule } = require("./checker");
+const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
 const { logInfo, logError } = require("./logger");
-const { ensureSession } = require("./session");
+const { ensureSession, getSessionPage } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 
-// const FORCE_BOOKING = true;
+const FORCE_BOOKING = false; // true dla testów
 
 const POLL_INTERVAL_MS = 20000;
+const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
+const MAX_CONSECUTIVE_FETCH_FAILURES = 3;
 const sentSlots = new Set();
 let bookingInProgress = false;
 
@@ -104,8 +106,30 @@ async function notify(slots) {
 }
 
 function buildSlotKey(slot) {
-  const key = `${slot.dateTime}_${slot.wordId}_${slot.examType}`;
+  const key = slot.time
+    ? `${slot.date}_${slot.time}_${slot.wordId}_${slot.examType}`
+    : `${slot.date}_${slot.wordId}_${slot.examType}`;
+  console.log("SLOT KEY:", key);
   return key;
+}
+
+function getEarliestTimestampFromSet(slotsSet) {
+  const timestamps = [];
+
+  for (const key of slotsSet) {
+    const [date, time] = key.split("_");
+
+    const ts = new Date(`${date}T${time}`).getTime();
+    if (!Number.isNaN(ts)) {
+      timestamps.push(ts);
+    }
+  }
+
+  return timestamps.length ? Math.min(...timestamps) : null;
+}
+
+function getSlotTimestamp(slot) {
+  return new Date(`${slot.date}T${slot.time}`).getTime();
 }
 
 async function loadSeenSlots(filePath) {
@@ -131,10 +155,24 @@ async function saveSeenSlots(filePath, slotsSet) {
   await saveJson(filePath, Array.from(slotsSet));
 }
 
+function isNetworkFetchError(errorMessage) {
+  return (
+    errorMessage.includes("ECONNRESET") ||
+    errorMessage.includes("fetch failed") ||
+    errorMessage.includes("ETIMEDOUT") ||
+    errorMessage.includes("ECONNREFUSED") ||
+    errorMessage.includes("ENOTFOUND") ||
+    errorMessage.includes("EAI_AGAIN") ||
+    errorMessage.includes("socket hang up") ||
+    errorMessage.includes("UND_ERR")
+  );
+}
+
 async function runWatcher() {
   const config = loadConfig();
-  let session = await ensureSession(config);
   const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
+  let session = null;
+  let consecutiveFetchFailures = 0;
 
   sentSlots.clear();
 
@@ -146,8 +184,17 @@ async function runWatcher() {
 
   while (true) {
     try {
+      console.log("SESSION STATE:", session ? "OK" : "MISSING");
+      if (!session) {
+        console.log("NO SESSION -> creating...");
+        session = await ensureSession(config);
+        console.log("SESSION STATE:", session ? "OK" : "MISSING");
+        console.log("SESSION READY");
+      }
+
       const payload = buildPayload();
-      const responseData = await fetchSchedule(session, payload, config);
+      const responseData = await fetchWithRetry(() => fetchSchedule(session, payload, config));
+      consecutiveFetchFailures = 0;
       const practicalTerms = getPracticalTerms(responseData, payload);
 
       if (practicalTerms.length === 0) {
@@ -155,17 +202,36 @@ async function runWatcher() {
       } else {
         logInfo(`Znaleziono ${practicalTerms.length} terminow praktycznych.`);
 
-        const newSlots = practicalTerms.filter((slot) => !sentSlots.has(buildSlotKey(slot)));
-        console.log("NEW SLOTS:", newSlots.length);
+        const earliestSavedTs = getEarliestTimestampFromSet(sentSlots);
+        console.log("EARLIEST SAVED TS:", earliestSavedTs);
 
-        if (newSlots.length === 0) {
-          logInfo("Brak nowych slotow do wyslania.");
+        let betterSlots = [];
+
+        if (!earliestSavedTs) {
+          const initialSlots = practicalTerms.slice(0, 5);
+
+          for (const term of initialSlots) {
+            sentSlots.add(buildSlotKey(term));
+          }
+
+          await saveSeenSlots(config.seenSlotsFilePath, sentSlots);
+          logInfo("Initial slots saved (no notification).");
+          await saveJson(config.debugSlotsFilePath, practicalTerms);
+          await sleep(POLL_INTERVAL_MS);
+          continue;
         } else {
-          const notifiedSlots = await notify(newSlots);
-        // if (newSlots.length === 0 && !FORCE_BOOKING) {
-        //   logInfo("Brak nowych slotow do wyslania.");
-        //   } else {
-        //     const notifiedSlots = await notify(newSlots.length > 0 ? newSlots : practicalTerms);
+          betterSlots = practicalTerms.filter((slot) => {
+            const ts = getSlotTimestamp(slot);
+            return ts < earliestSavedTs;
+          });
+        }
+
+        console.log("BETTER SLOTS:", betterSlots.length);
+
+        if (betterSlots.length === 0 && !FORCE_BOOKING) {
+          logInfo("Brak wcześniejszych slotów.");
+        } else {
+          const notifiedSlots = await notify(betterSlots);
 
           for (const term of notifiedSlots) {
             sentSlots.add(buildSlotKey(term));
@@ -177,7 +243,7 @@ async function runWatcher() {
             bookingInProgress = true;
 
             try {
-              await runBooker();
+              await runBooker(getSessionPage());
             } catch (err) {
               console.error("BOOKING ERROR:", err);
             } finally {
@@ -189,9 +255,26 @@ async function runWatcher() {
 
       await saveJson(config.debugSlotsFilePath, practicalTerms);
     } catch (error) {
-      if (String(error?.message || error).includes("401")) {
-        logInfo("SESSION EXPIRED");
-        session = await ensureSession(config, { forceRefresh: true });
+      const errorMessage = String(error?.message || error);
+
+      if (
+        errorMessage.includes("401") ||
+        errorMessage.includes("SESSION_EXPIRED_HTML")
+      ) {
+        session = null;
+        console.log("SESSION STATE:", session ? "OK" : "MISSING");
+        continue;
+      }
+
+      if (isNetworkFetchError(errorMessage)) {
+        consecutiveFetchFailures += 1;
+
+        if (consecutiveFetchFailures >= MAX_CONSECUTIVE_FETCH_FAILURES) {
+          session = null;
+        }
+
+        logError("Blad sieci podczas pobierania terminarza.", error);
+        await sleep(FETCH_FAILURE_COOLDOWN_MS);
         continue;
       }
 
