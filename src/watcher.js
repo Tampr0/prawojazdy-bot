@@ -108,7 +108,9 @@ async function notify(slots) {
 
 function buildSlotKey(slot) {
   const key = `${slot.date}_${slot.time}_${slot.wordId}_${slot.examType}`;
+  if (DEBUG) {
   console.log("SLOT KEY:", key);
+}
   return key;
 }
 
@@ -147,7 +149,27 @@ function isNetworkFetchError(errorMessage) {
     errorMessage.includes("UND_ERR")
   );
 }
+function getCutoffTimestamp(slotsSet) {
+  const timestamps = [];
 
+  for (const key of slotsSet) {
+    const [date] = key.split("_");
+    const ts = new Date(date).getTime();
+
+    if (!Number.isNaN(ts)) {
+      timestamps.push(ts);
+    }
+  }
+  // zabezpieczenie
+  if (timestamps.length < 5) {
+    return null;
+  }
+  // 🔥 sort + weź TOP5
+  const sorted = timestamps.sort((a, b) => a - b);
+  const top5 = sorted.slice(0, 5);
+
+  return top5.length ? Math.min(...top5) : null;
+}
 async function runWatcher() {
   const config = loadConfig();
   const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
@@ -176,7 +198,17 @@ async function runWatcher() {
       const responseData = await fetchWithRetry(() => fetchSchedule(session, payload, config));
       consecutiveFetchFailures = 0;
       const practicalTerms = getPracticalTerms(responseData, payload);
-
+      if (DEBUG) {
+        practicalTerms.unshift({
+          id: "MOCK_ID",
+          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          time: "08:00",
+          wordId: "3",
+          examType: "PRACTICAL",
+          places: 1,
+          amount: 222,
+        });
+      }
       if (practicalTerms.length === 0) {
         logInfo("Brak terminow praktycznych");
       } else {
@@ -196,18 +228,31 @@ async function runWatcher() {
           continue;
         }
 
-        const newSlots = practicalTerms.filter((slot) => {
-          const key = buildSlotKey(slot);
-          return !sentSlots.has(key);
-        });
+        const cutoffTs = getCutoffTimestamp(sentSlots);
 
-        console.log("NEW SLOTS:", newSlots.length);
+const newSlots = practicalTerms.filter((slot) => {
+  const key = buildSlotKey(slot);
+
+  // jeśli już znamy → ignoruj
+  if (sentSlots.has(key)) return false;
+
+  // jeśli nie mamy cutoff → nie bierz nic
+  if (!cutoffTs) return false;
+
+  const ts = new Date(slot.date).getTime();
+
+  return ts < cutoffTs;
+});
+
+        if (DEBUG) {
+          console.log("NEW SLOTS:", newSlots.length);
+        }
 
         if (newSlots.length === 0 && !FORCE_BOOKING) {
           logInfo("Brak nowych slotow");
         } else {
           const notifiedSlots = await notify(newSlots);
-          const slotsToSave = newSlots; // KLUCZOWE
+          const slotsToSave = notifiedSlots;
 
           for (const term of slotsToSave) {
             sentSlots.add(buildSlotKey(term));
