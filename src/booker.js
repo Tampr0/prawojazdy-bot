@@ -1,3 +1,23 @@
+const fetch = require("node-fetch");
+
+async function sendTelegram(message) {
+  const token = process.env.TELEGRAM_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+  await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: message,
+    }),
+  });
+}
+
 async function clickByText(page, text, timeout = 30000) {
   const candidates = [
     page.getByRole("link", { name: new RegExp(text, "i") }).first(),
@@ -16,6 +36,19 @@ async function clickByText(page, text, timeout = 30000) {
   }
 
   throw new Error(`Nie znaleziono elementu: ${text}`);
+}
+
+async function clickNext(page) {
+  for (let i = 0; i < 5; i++) {
+    const next = page.getByRole("button", { name: /dalej/i });
+
+    if (await next.count()) {
+      await next.first().click();
+      await page.waitForTimeout(300); // mały delay zamiast networkidle
+    } else {
+      break;
+    }
+  }
 }
 
 async function safeClick(locator) {
@@ -259,7 +292,7 @@ async function ensureAppPage(page) {
     timeout: 60000,
   });
   await page.waitForLoadState("domcontentloaded").catch(() => { });
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1000);
 }
 
 async function runBooker(page) {
@@ -275,7 +308,7 @@ async function runBooker(page) {
   if (url.includes("/prawo-jazdy") && !url.includes("sprawdz-wolny-termin")) {
     console.log("STEP 1: go to availability");
     await clickByText(page, "Sprawdź dostępność");
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(300);
     url = page.url();
   }
 
@@ -286,7 +319,7 @@ async function runBooker(page) {
 
     if ((await examOption.count()) > 0) {
       await safeClick(examOption.first());
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(300);
       url = page.url();
     } else {
       console.log("Exam option already selected or not present");
@@ -354,15 +387,35 @@ async function runBooker(page) {
   console.log("CLICKING SLOT:", slotText);
 
   await firstSlot.click();
-  await page.getByRole("button", { name: "Dalej" }).click();
+  const dalej = page.getByRole("button", { name: "Dalej" });
 
-  await page.waitForTimeout(2000);
+  await dalej.first().waitFor({ state: "visible", timeout: 5000 });
+  await dalej.first().click();
+
+  await page.waitForTimeout(300);
 
   await fillPersonalData(page);
 
-  await clickByText(page, "Dalej");
+  // klikamy kolejne "Dalej"
+  await clickNext(page);
+
+  // TERAZ dopiero podsumowanie
+  try {
+    const confirm = page.getByRole("button", { name: /potwierdzam/i });
+
+    if (await confirm.count()) {
+      await confirm.click();
+      console.log("CONFIRMED");
+    }
+  } catch { }
 
   console.log("BOOKING ATTEMPTED");
+
+  if (page.url().includes("platnosc") || page.url().includes("payment")) {
+    console.log("=== GOT PAYMENT PAGE ===");
+
+    await sendTelegram("🔥 TERMIN ZŁAPANY – WEJDŹ I ZAPŁAĆ!");
+  }
 }
 
 async function fillPersonalData(page) {
@@ -383,23 +436,20 @@ async function fillPersonalData(page) {
   await tryFill(page.getByPlaceholder(/PESEL/i), process.env.PESEL);
   await tryFill(page.getByPlaceholder(/PKK/i), process.env.PKK);
   // KATEGORIA PRAWA JAZDY
-try {
-  console.log("SELECT CATEGORY");
+  try {
+    console.log("SELECT CATEGORY");
 
-  // klik dropdown
-  const categoryInput = page.getByText(/Wybierz kategorię prawa jazdy/i).first();
-  await categoryInput.click();
+    await page.click('input[placeholder="Wybierz kategorię prawa jazdy"]');
 
-  await page.waitForTimeout(500);
+    await page.locator('text="B"').last().waitFor();
+    await page.locator('text="B"').last().click();
 
-  // wybierz "B"
-  const optionB = page.getByText(/^B$/).first();
-  await optionB.click();
+    await page.locator('text="B"').last().click();
 
-  console.log("CATEGORY SELECTED: B");
-} catch (err) {
-  console.log("CATEGORY SELECT FAILED");
-}
+    console.log("CATEGORY SELECTED: B");
+  } catch (err) {
+    console.log("CATEGORY SELECT FAILED", err);
+  }
   await tryFill(page.getByPlaceholder(/mail/i), process.env.EMAIL);
   await tryFill(page.getByPlaceholder(/telefon/i), process.env.PHONE);
 
@@ -411,6 +461,7 @@ try {
   } catch {
     console.log("CHECKBOX NOT FOUND");
   }
+
 }
 
 module.exports = {
