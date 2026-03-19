@@ -382,6 +382,24 @@ async function fillPersonalData(page) {
   await tryFill(page.getByPlaceholder(/nazw/i), process.env.LAST_NAME);
   await tryFill(page.getByPlaceholder(/PESEL/i), process.env.PESEL);
   await tryFill(page.getByPlaceholder(/PKK/i), process.env.PKK);
+  // KATEGORIA PRAWA JAZDY
+try {
+  console.log("SELECT CATEGORY");
+
+  // klik dropdown
+  const categoryInput = page.getByText(/Wybierz kategorię prawa jazdy/i).first();
+  await categoryInput.click();
+
+  await page.waitForTimeout(500);
+
+  // wybierz "B"
+  const optionB = page.getByText(/^B$/).first();
+  await optionB.click();
+
+  console.log("CATEGORY SELECTED: B");
+} catch (err) {
+  console.log("CATEGORY SELECT FAILED");
+}
   await tryFill(page.getByPlaceholder(/mail/i), process.env.EMAIL);
   await tryFill(page.getByPlaceholder(/telefon/i), process.env.PHONE);
 
