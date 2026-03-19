@@ -1,4 +1,4 @@
-const fetch = require("node-fetch");
+
 
 async function sendTelegram(message) {
   const token = process.env.TELEGRAM_TOKEN;
@@ -296,8 +296,8 @@ async function ensureAppPage(page) {
 }
 
 async function runBooker(page) {
-  if (!page) {
-    throw new Error("runBooker wymaga aktywnego page.");
+  if (!page || page.isClosed()) {
+    throw new Error("PAGE_NOT_AVAILABLE");
   }
 
   await ensureAppPage(page);
@@ -436,20 +436,15 @@ async function fillPersonalData(page) {
   await tryFill(page.getByPlaceholder(/PESEL/i), process.env.PESEL);
   await tryFill(page.getByPlaceholder(/PKK/i), process.env.PKK);
   // KATEGORIA PRAWA JAZDY
-  try {
-    console.log("SELECT CATEGORY");
+  await page.click('input[placeholder="Wybierz kategorię prawa jazdy"]');
 
-    await page.click('input[placeholder="Wybierz kategorię prawa jazdy"]');
+  const optionB = page.locator('text="B"').last();
 
-    await page.locator('text="B"').last().waitFor();
-    await page.locator('text="B"').last().click();
+  await optionB.waitFor({ state: "visible" });
+  await optionB.click();
 
-    await page.locator('text="B"').last().click();
-
-    console.log("CATEGORY SELECTED: B");
-  } catch (err) {
-    console.log("CATEGORY SELECT FAILED", err);
-  }
+  // KLUCZOWE — czekamy aż dropdown zniknie
+  await optionB.waitFor({ state: "hidden", timeout: 5000 });
   await tryFill(page.getByPlaceholder(/mail/i), process.env.EMAIL);
   await tryFill(page.getByPlaceholder(/telefon/i), process.env.PHONE);
 

@@ -18,7 +18,7 @@ async function launchBrowserContext() {
     args: [
       "--start-maximized",
       "--disable-blink-features=AutomationControlled",
-      "--window-position=1920,0"
+      "--window-position=0,0"
     ],
     // args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
   });

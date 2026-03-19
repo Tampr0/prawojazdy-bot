@@ -154,6 +154,7 @@ function isNetworkFetchError(errorMessage) {
   );
 }
 
+
 async function runWatcher() {
   const config = loadConfig();
   const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
@@ -245,9 +246,31 @@ async function runWatcher() {
             bookingInProgress = true;
 
             try {
-              await runBooker(getSessionPage());
+              let page = getSessionPage();
+
+              if (!page || page.isClosed()) {
+                console.log("BOOKER PAGE CLOSED -> REBUILD SESSION");
+                session = await ensureSession(config, { forceRefresh: true });
+                page = getSessionPage();
+              }
+
+              if (!page || page.isClosed()) {
+                throw new Error("PAGE_NOT_AVAILABLE");
+              }
+
+              await runBooker(page);
             } catch (err) {
               console.error("BOOKING ERROR:", err);
+
+              const errorMessage = String(err?.message || err);
+
+              if (
+                errorMessage.includes("PAGE_NOT_AVAILABLE") ||
+                errorMessage.includes("Target page, context or browser has been closed")
+              ) {
+                console.log("BOOKER PAGE LOST -> RESET SESSION");
+                session = null;
+              }
             } finally {
               bookingInProgress = false;
             }
