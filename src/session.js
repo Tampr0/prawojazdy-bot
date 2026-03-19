@@ -16,10 +16,10 @@ async function launchBrowserContext() {
     headless: false,
     viewport: null,
     args: [
-  "--start-maximized",
-  "--disable-blink-features=AutomationControlled",
-  "--window-position=1920,0"
-],
+      "--start-maximized",
+      "--disable-blink-features=AutomationControlled",
+      "--window-position=1920,0"
+    ],
     // args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
   });
 }
@@ -29,11 +29,17 @@ async function ensureSharedPage() {
     return sharedPage;
   }
 
-  if (!sharedContext) {
-    sharedContext = await launchBrowserContext();
+  if (sharedContext) {
+    try {
+      await sharedContext.close();
+    } catch {}
+    sharedContext = null;
+    sharedPage = null;
   }
 
+  sharedContext = await launchBrowserContext();
   sharedPage = sharedContext.pages()[0] || (await sharedContext.newPage());
+
   return sharedPage;
 }
 
@@ -49,7 +55,7 @@ async function ensureAppPage(page) {
     waitUntil: "domcontentloaded",
     timeout: 60000,
   });
-  await page.waitForLoadState("domcontentloaded").catch(() => {});
+  await page.waitForLoadState("domcontentloaded").catch(() => { });
   await page.waitForTimeout(2000);
 }
 
@@ -106,12 +112,12 @@ function extractBearerToken(authorizationHeader) {
 function isSessionShapeValid(session) {
   return Boolean(
     session &&
-      typeof session.bearerToken === "string" &&
-      session.bearerToken.length > 0 &&
-      Array.isArray(session.cookies) &&
-      typeof session.userAgent === "string" &&
-      session.userAgent.length > 0 &&
-      typeof session.capturedAt === "string"
+    typeof session.bearerToken === "string" &&
+    session.bearerToken.length > 0 &&
+    Array.isArray(session.cookies) &&
+    typeof session.userAgent === "string" &&
+    session.userAgent.length > 0 &&
+    typeof session.capturedAt === "string"
   );
 }
 
@@ -232,12 +238,27 @@ async function loadSession(sessionFilePath) {
   const content = await fs.readFile(sessionFilePath, "utf8");
   return JSON.parse(content);
 }
+function isTokenExpired(session) {
+  try {
+    const payload = JSON.parse(
+      Buffer.from(session.bearerToken.split(".")[1], "base64").toString()
+    );
+
+    return Date.now() / 1000 > payload.exp - 60;
+  } catch {
+    return false;
+  }
+}
 
 async function getValidSession(sessionFilePath) {
   try {
     const session = await loadSession(sessionFilePath);
 
-    if (!isSessionShapeValid(session) || !isSessionFresh(session)) {
+    if (
+      !isSessionShapeValid(session) ||
+      !isSessionFresh(session) ||
+      isTokenExpired(session)
+    ) {
       return null;
     }
 
@@ -298,16 +319,16 @@ async function loginAndCaptureSession(config = loadConfig()) {
     console.log("FILL PASSWORD");
 
     await Promise.all([
-      page.waitForLoadState("domcontentloaded").catch(() => {}),
+      page.waitForLoadState("domcontentloaded").catch(() => { }),
       submitLoginForm(page),
     ]);
-    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForLoadState("domcontentloaded").catch(() => { });
     await acceptCookies(page);
 
     if (page.url().includes("logowanie")) {
       console.log("RETRY AFTER LOGIN STUCK");
       await page.reload();
-      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForLoadState("domcontentloaded").catch(() => { });
       await acceptCookies(page);
     }
 

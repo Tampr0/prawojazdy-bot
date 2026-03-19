@@ -101,12 +101,25 @@ async function fetchSchedule(session, payload, config) {
 
   if (!response.ok) {
     const errorText = await response.text();
+
+    if (
+      errorText.trimStart().startsWith("<") ||
+      errorText.includes("login") ||
+      errorText.includes("logowanie")
+    ) {
+      throw new Error("SESSION_EXPIRED_HTML");
+    }
+
     throw new Error(`API returned ${response.status}: ${errorText}`);
   }
 
   const text = await response.text();
 
-  if (text.trimStart().startsWith("<")) {
+  if (
+    text.trimStart().startsWith("<") ||
+    text.includes("login") ||
+    text.includes("logowanie")
+  ) {
     throw new Error("SESSION_EXPIRED_HTML");
   }
 

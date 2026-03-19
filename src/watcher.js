@@ -10,13 +10,17 @@ const { sendTelegramMessage } = require("./notifier");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 20000;
+const POLL_INTERVAL_MS = 15000;
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
 const MAX_CONSECUTIVE_FETCH_FAILURES = 3;
 const sentSlots = new Set();
 let bookingInProgress = false;
+
+function getNextInterval() {
+  return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000); // +0–3s
+}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -109,8 +113,8 @@ async function notify(slots) {
 function buildSlotKey(slot) {
   const key = `${slot.date}_${slot.time}_${slot.wordId}_${slot.examType}`;
   if (DEBUG) {
-  console.log("SLOT KEY:", key);
-}
+    console.log("SLOT KEY:", key);
+  }
   return key;
 }
 
@@ -149,27 +153,7 @@ function isNetworkFetchError(errorMessage) {
     errorMessage.includes("UND_ERR")
   );
 }
-function getCutoffTimestamp(slotsSet) {
-  const timestamps = [];
 
-  for (const key of slotsSet) {
-    const [date] = key.split("_");
-    const ts = new Date(date).getTime();
-
-    if (!Number.isNaN(ts)) {
-      timestamps.push(ts);
-    }
-  }
-  // zabezpieczenie
-  if (timestamps.length < 5) {
-    return null;
-  }
-  // 🔥 sort + weź TOP5
-  const sorted = timestamps.sort((a, b) => a - b);
-  const top5 = sorted.slice(0, 5);
-
-  return top5.length ? Math.min(...top5) : null;
-}
 async function runWatcher() {
   const config = loadConfig();
   const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
@@ -198,10 +182,16 @@ async function runWatcher() {
       const responseData = await fetchWithRetry(() => fetchSchedule(session, payload, config));
       consecutiveFetchFailures = 0;
       const practicalTerms = getPracticalTerms(responseData, payload);
+
+      const now = Date.now();
       if (DEBUG) {
+        const minTs = now + config.slotMinDays * 24 * 60 * 60 * 1000;
+        const maxTs = now + config.slotMaxDays * 24 * 60 * 60 * 1000;
+        const mockTs = Math.floor((minTs + maxTs) / 2);
+
         practicalTerms.unshift({
-          id: "MOCK_ID",
-          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          id: "MOCK_" + Date.now(),
+          date: new Date(mockTs).toISOString(),
           time: "08:00",
           wordId: "3",
           examType: "PRACTICAL",
@@ -209,7 +199,6 @@ async function runWatcher() {
           amount: 222,
         });
       }
-      const now = Date.now();
 
       const minTs = now + config.slotMinDays * 24 * 60 * 60 * 1000;
       const maxTs = now + config.slotMaxDays * 24 * 60 * 60 * 1000;
@@ -218,48 +207,23 @@ async function runWatcher() {
         const ts = new Date(slot.date).getTime();
         return ts >= minTs && ts <= maxTs;
       });
-      
+
       if (practicalTerms.length === 0) {
-  logInfo("Brak terminow praktycznych");
-} else {
-  logInfo(`Znaleziono ${practicalTerms.length} terminow praktycznych.`);
+        logInfo("Brak terminow praktycznych");
+      } else {
+        logInfo(`Znaleziono ${filteredByRange.length} terminow w zakresie.`);
 
-  if (filteredByRange.length === 0) {
-    logInfo("Brak slotow w zadanym zakresie dni");
-    await saveJson(config.debugSlotsFilePath, practicalTerms);
-    await sleep(POLL_INTERVAL_MS);
-    continue;
-  }
-
-        if (sentSlots.size === 0) {
-          const initialSlots = filteredByRange.slice(0, 5);
-
-          for (const term of initialSlots) {
-            sentSlots.add(buildSlotKey(term));
-          }
-
-          await saveSeenSlots(config.seenSlotsFilePath, sentSlots);
-          logInfo("Initial slots saved (no notification).");
+        if (filteredByRange.length === 0) {
+          logInfo("Brak slotow w zadanym zakresie dni");
           await saveJson(config.debugSlotsFilePath, practicalTerms);
-          await sleep(POLL_INTERVAL_MS);
+          await sleep(getNextInterval());
           continue;
         }
 
-        const cutoffTs = getCutoffTimestamp(sentSlots);
-
-const newSlots = filteredByRange.filter((slot) => {
-  const key = buildSlotKey(slot);
-
-  // jeśli już znamy → ignoruj
-  if (sentSlots.has(key)) return false;
-
-  // jeśli nie mamy cutoff → nie bierz nic
-  if (!cutoffTs) return false;
-
-  const ts = new Date(slot.date).getTime();
-
-  return ts < cutoffTs;
-});
+        const newSlots = filteredByRange.filter((slot) => {
+          const key = buildSlotKey(slot);
+          return !sentSlots.has(key);
+        });
 
         if (DEBUG) {
           console.log("NEW SLOTS:", newSlots.length);
@@ -297,10 +261,13 @@ const newSlots = filteredByRange.filter((slot) => {
 
       if (
         errorMessage.includes("401") ||
-        errorMessage.includes("SESSION_EXPIRED_HTML")
+        errorMessage.includes("403") ||
+        errorMessage.includes("SESSION_EXPIRED_HTML") ||
+        errorMessage.includes("<!DOCTYPE html") ||
+        errorMessage.includes("<html")
       ) {
+        console.log("SESSION EXPIRED DETECTED");
         session = null;
-        console.log("SESSION STATE:", session ? "OK" : "MISSING");
         continue;
       }
 

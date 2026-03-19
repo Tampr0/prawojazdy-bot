@@ -258,7 +258,7 @@ async function ensureAppPage(page) {
     waitUntil: "domcontentloaded",
     timeout: 60000,
   });
-  await page.waitForLoadState("domcontentloaded").catch(() => {});
+  await page.waitForLoadState("domcontentloaded").catch(() => { });
   await page.waitForTimeout(2000);
 }
 
@@ -356,7 +356,43 @@ async function runBooker(page) {
   await firstSlot.click();
   await page.getByRole("button", { name: "Dalej" }).click();
 
+  await page.waitForTimeout(2000);
+
+  await fillPersonalData(page);
+
+  await clickByText(page, "Dalej");
+
   console.log("BOOKING ATTEMPTED");
+}
+
+async function fillPersonalData(page) {
+  console.log("STEP: filling personal data");
+
+  const tryFill = async (locator, value) => {
+    try {
+      await locator.first().waitFor({ state: "visible", timeout: 3000 });
+      await locator.first().fill(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  await tryFill(page.getByPlaceholder(/imi/i), process.env.FIRST_NAME);
+  await tryFill(page.getByPlaceholder(/nazw/i), process.env.LAST_NAME);
+  await tryFill(page.getByPlaceholder(/PESEL/i), process.env.PESEL);
+  await tryFill(page.getByPlaceholder(/PKK/i), process.env.PKK);
+  await tryFill(page.getByPlaceholder(/mail/i), process.env.EMAIL);
+  await tryFill(page.getByPlaceholder(/telefon/i), process.env.PHONE);
+
+  // checkbox (zgoda)
+  try {
+    const checkbox = page.locator('input[type="checkbox"]').first();
+    await checkbox.check();
+    console.log("CHECKBOX CHECKED");
+  } catch {
+    console.log("CHECKBOX NOT FOUND");
+  }
 }
 
 module.exports = {
