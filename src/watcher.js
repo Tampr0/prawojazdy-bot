@@ -2,6 +2,7 @@ const fs = require("fs/promises");
 const { loadConfig } = require("./config");
 const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
+const { bookSlotAPI } = require("./bookerApi");
 const { logInfo, logError } = require("./logger");
 const { ensureSession, getSessionPage } = require("./session");
 const { saveJson } = require("./storage");
@@ -258,7 +259,28 @@ async function runWatcher() {
                 throw new Error("PAGE_NOT_AVAILABLE");
               }
 
-              await runBooker(page);
+              const slot = newSlots[0];
+
+              if (!slot || !slot.id) {
+                console.log("INVALID SLOT - SKIP");
+              } else {
+                try {
+                  console.log("TRY API BOOKING:", slot);
+                  console.log("FULL SLOT DEBUG:", JSON.stringify(slot, null, 2));
+
+                  const result = await bookSlotAPI(session, slot);
+
+                  console.log("API BOOK SUCCESS:", result);
+
+                  await sendTelegramMessage(
+                    `🔥 SLOT ZAREZERWOWANY API\n${slot.date} ${slot.time}`
+                  );
+                } catch (apiError) {
+                  console.log("API BOOK FAILED -> fallback to Playwright", apiError);
+
+                  await runBooker(page);
+                }
+              }
             } catch (err) {
               console.error("BOOKING ERROR:", err);
 
