@@ -279,7 +279,13 @@ async function runWatcher() {
 
 
                   await sendTelegramMessage(
-                    `🔥 SLOT ZAREZERWOWANY API\n${slot.date} ${slot.time}`
+                    `🔥 SLOT ZAREZERWOWANY API
+
+                    📅 ${slot.date}
+                    ⏰ ${slot.time}
+
+                    💳 PŁATNOŚĆ:
+                    ${paymentUrl}`
                   );
                 } catch (apiError) {
                   console.log("API BOOK FAILED -> fallback to Playwright", apiError);
