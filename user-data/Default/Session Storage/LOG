@@ -1,3 +1,6 @@
-2026/03/19-21:23:43.004 cc0 Reusing MANIFEST C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\Session Storage/MANIFEST-000001
-2026/03/19-21:23:43.006 cc0 Recovering log #7
-2026/03/19-21:23:43.010 cc0 Reusing old log C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\Session Storage/000007.log 
+2026/03/19-22:40:26.733 1e24 Reusing MANIFEST C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\Session Storage/MANIFEST-000001
+2026/03/19-22:40:26.735 1e24 Recovering log #7
+2026/03/19-22:40:26.758 1e24 Reusing old log C:\Users\kondo\Desktop\prawojazdy-bot\user-data\Default\Session Storage/000007.log 
+2026/03/20-01:34:47.493 5440 Level-0 table #11: started
+2026/03/20-01:34:47.499 5440 Level-0 table #11: 26433 bytes OK
+2026/03/20-01:34:47.502 5440 Delete type=0 #7
