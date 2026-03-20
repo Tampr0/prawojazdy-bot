@@ -271,6 +271,12 @@ async function runWatcher() {
                   const result = await bookSlotAPI(session, slot);
 
                   console.log("API BOOK SUCCESS:", result);
+                  const paymentUrl = `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${result.id}/platnosc`;
+
+                  console.log("OPEN PAYMENT:", paymentUrl);
+
+                  await page.goto(paymentUrl);
+
 
                   await sendTelegramMessage(
                     `🔥 SLOT ZAREZERWOWANY API\n${slot.date} ${slot.time}`
