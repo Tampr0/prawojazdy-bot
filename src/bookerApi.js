@@ -8,21 +8,26 @@ async function bookSlotAPI(session, slot) {
     .join("; ");
 
   const payload = {
-    category: "B",
-
-    firstname: process.env.FIRST_NAME,
-    lastname: process.env.LAST_NAME,
-    pesel: process.env.PESEL,
-    phoneNumber: process.env.PHONE,
-    email: process.env.EMAIL,
-    pkk: process.env.PKK,
-
-    wordId: slot.wordId,
-    practiceId: slot.id,
-    examId: slot.id,
-    examDate: slot.date,
-
-    language: "POLISH"
+    candidate: {
+      category: "B",
+      email: process.env.EMAIL,
+      firstname: process.env.FIRST_NAME,
+      lastname: process.env.LAST_NAME,
+      pesel: process.env.PESEL,
+      phoneNumber: process.env.PHONE,
+      pkk: process.env.PKK,
+      pkz: null,
+    },
+    exam: {
+      organizationUnitId: slot.wordId,
+      practiceId: slot.id,
+      theoryId: null,
+    },
+    languageAndOsk: {
+      language: "POLISH",
+      signLanguage: "NONE",
+      oskVehicleReservation: null,
+    },
   };
 
   console.log("BOOK PAYLOAD:", JSON.stringify(payload, null, 2));
