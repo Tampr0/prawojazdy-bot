@@ -250,7 +250,9 @@ async function runWatcher() {
               let page = getSessionPage();
 
               if (!page || page.isClosed()) {
-                console.log("BOOKER PAGE CLOSED -> REBUILD SESSION");
+                console.log("BOOKER PAGE CLOSED -> HARD RESET");
+
+                await resetBrowser();   // 🔥
                 session = await ensureSession(config, { forceRefresh: true });
                 page = getSessionPage();
               }
