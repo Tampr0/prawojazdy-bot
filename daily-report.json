@@ -36,7 +36,7 @@
       "16": 0,
       "17": 0,
       "18": 0,
-      "19": 1,
+      "19": 0,
       "20": 0,
       "21": 0,
       "22": 0,
@@ -52,8 +52,8 @@
       "08": 0,
       "09": 0
     },
-    "avgLifetimeSeconds": 2732,
+    "avgLifetimeSeconds": 0,
     "totalAppeared": 0,
-    "totalDisappeared": 1
+    "totalDisappeared": 0
   }
 }

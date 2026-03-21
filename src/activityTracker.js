@@ -12,6 +12,8 @@ let dailyStats = createEmptyDailyStats();
 let reportFlushChain = Promise.resolve();
 let exitHooksRegistered = false;
 let stateLoadPromise = null;
+let dailyStatsLoadPromise = null;
+const flushedStatsByDate = new Map();
 
 function createEmptyHourlyStats() {
   return Object.fromEntries(HOUR_KEYS.map((hour) => [hour, 0]));
@@ -22,6 +24,8 @@ function createEmptyDailyStats() {
     appearancesByHour: createEmptyHourlyStats(),
     disappearancesByHour: createEmptyHourlyStats(),
     lifetimes: [],
+    lifetimeSum: 0,
+    lifetimeCount: 0,
     totalAppeared: 0,
     totalDisappeared: 0,
   };
@@ -29,6 +33,18 @@ function createEmptyDailyStats() {
 
 function buildSlotKey(slot) {
   return `${slot.date}_${slot.time}_${slot.wordId}_${slot.examType}`;
+}
+
+function createStatsSnapshot(stats) {
+  return {
+    appearancesByHour: { ...stats.appearancesByHour },
+    disappearancesByHour: { ...stats.disappearancesByHour },
+    lifetimes: [...stats.lifetimes],
+    lifetimeSum: stats.lifetimeSum,
+    lifetimeCount: stats.lifetimeCount,
+    totalAppeared: stats.totalAppeared,
+    totalDisappeared: stats.totalDisappeared,
+  };
 }
 
 function getWarsawDateParts(date = new Date()) {
@@ -87,6 +103,43 @@ async function loadReport() {
   }
 }
 
+function mergeHours(a, b) {
+  const result = {};
+
+  for (const hour of HOUR_KEYS) {
+    result[hour] = (a?.[hour] || 0) + (b?.[hour] || 0);
+  }
+
+  return result;
+}
+
+function subtractHours(currentHours, previousHours) {
+  const result = {};
+
+  for (const hour of HOUR_KEYS) {
+    result[hour] = Math.max(0, (currentHours?.[hour] || 0) - (previousHours?.[hour] || 0));
+  }
+
+  return result;
+}
+
+function buildStatsFromReportEntry(reportEntry) {
+  const stats = createEmptyDailyStats();
+
+  if (!reportEntry || typeof reportEntry !== "object") {
+    return stats;
+  }
+
+  stats.appearancesByHour = mergeHours(stats.appearancesByHour, reportEntry.appearByHour);
+  stats.disappearancesByHour = mergeHours(stats.disappearancesByHour, reportEntry.disappearByHour);
+  stats.totalAppeared = Number(reportEntry.totalAppeared || 0);
+  stats.totalDisappeared = Number(reportEntry.totalDisappeared || 0);
+  stats.lifetimeCount = stats.totalDisappeared;
+  stats.lifetimeSum = Number(reportEntry.avgLifetimeSeconds || 0) * stats.lifetimeCount;
+
+  return stats;
+}
+
 async function loadState() {
   try {
     const raw = await fs.readFile(STATE_FILE, "utf8");
@@ -127,13 +180,11 @@ async function ensureStateLoaded() {
 }
 
 function buildReportEntry(stats) {
-  const lifetimeCount = stats.lifetimes.length;
-  const lifetimeSum = stats.lifetimes.reduce((sum, value) => sum + value, 0);
-
   return {
     appearByHour: { ...stats.appearancesByHour },
     disappearByHour: { ...stats.disappearancesByHour },
-    avgLifetimeSeconds: lifetimeCount === 0 ? 0 : Number((lifetimeSum / lifetimeCount).toFixed(2)),
+    avgLifetimeSeconds:
+      stats.lifetimeCount === 0 ? 0 : Number((stats.lifetimeSum / stats.lifetimeCount).toFixed(2)),
     totalAppeared: stats.totalAppeared,
     totalDisappeared: stats.totalDisappeared,
   };
@@ -147,8 +198,43 @@ function queueReportFlush(reportDate, statsSnapshot) {
   reportFlushChain = reportFlushChain
     .then(async () => {
       const report = await loadReport();
-      report[reportDate] = buildReportEntry(statsSnapshot);
+      const existingEntry = report[reportDate] || {};
+      const existingStats = buildStatsFromReportEntry(existingEntry);
+      const previousFlushedStats = flushedStatsByDate.get(reportDate) || createEmptyDailyStats();
+      const deltaLifetimeSum = Math.max(
+        0,
+        Number(statsSnapshot.lifetimeSum || 0) - Number(previousFlushedStats.lifetimeSum || 0)
+      );
+      const deltaLifetimeCount = Math.max(
+        0,
+        Number(statsSnapshot.lifetimeCount || 0) - Number(previousFlushedStats.lifetimeCount || 0)
+      );
+      const mergedStats = {
+        appearancesByHour: mergeHours(
+          existingEntry.appearByHour,
+          subtractHours(statsSnapshot.appearancesByHour, previousFlushedStats.appearancesByHour)
+        ),
+        disappearancesByHour: mergeHours(
+          existingEntry.disappearByHour,
+          subtractHours(
+            statsSnapshot.disappearancesByHour,
+            previousFlushedStats.disappearancesByHour
+          )
+        ),
+        lifetimes: [],
+        lifetimeSum: existingStats.lifetimeSum + deltaLifetimeSum,
+        lifetimeCount: existingStats.lifetimeCount + deltaLifetimeCount,
+        totalAppeared:
+          Number(existingEntry.totalAppeared || 0) +
+          Math.max(0, statsSnapshot.totalAppeared - previousFlushedStats.totalAppeared),
+        totalDisappeared:
+          Number(existingEntry.totalDisappeared || 0) +
+          Math.max(0, statsSnapshot.totalDisappeared - previousFlushedStats.totalDisappeared),
+      };
+
+      report[reportDate] = buildReportEntry(mergedStats);
       await fs.writeFile(DAILY_REPORT_FILE, JSON.stringify(report, null, 2), "utf8");
+      flushedStatsByDate.set(reportDate, createStatsSnapshot(statsSnapshot));
     })
     .catch((error) => {
       console.error("activityTracker report flush failed:", error);
@@ -157,29 +243,41 @@ function queueReportFlush(reportDate, statsSnapshot) {
   return reportFlushChain;
 }
 
-function ensureStatsDate(nowParts) {
+async function loadDailyStatsForDate(reportDate) {
+  const report = await loadReport();
+  const loadedStats = buildStatsFromReportEntry(report[reportDate]);
+  dailyStats = loadedStats;
+  flushedStatsByDate.set(reportDate, createStatsSnapshot(loadedStats));
+}
+
+async function ensureStatsDate(nowParts) {
   if (!currentStatsDate) {
     currentStatsDate = nowParts.date;
-    return Promise.resolve();
+    if (!dailyStatsLoadPromise) {
+      dailyStatsLoadPromise = loadDailyStatsForDate(currentStatsDate);
+    }
+
+    await dailyStatsLoadPromise;
+    return;
   }
 
   if (currentStatsDate === nowParts.date) {
-    return Promise.resolve();
+    if (dailyStatsLoadPromise) {
+      await dailyStatsLoadPromise;
+    }
+
+    return;
   }
 
   const previousDate = currentStatsDate;
-  const previousStats = {
-    appearancesByHour: { ...dailyStats.appearancesByHour },
-    disappearancesByHour: { ...dailyStats.disappearancesByHour },
-    lifetimes: [...dailyStats.lifetimes],
-    totalAppeared: dailyStats.totalAppeared,
-    totalDisappeared: dailyStats.totalDisappeared,
-  };
+  const previousStats = createStatsSnapshot(dailyStats);
 
   currentStatsDate = nowParts.date;
   dailyStats = createEmptyDailyStats();
+  dailyStatsLoadPromise = loadDailyStatsForDate(currentStatsDate);
 
-  return queueReportFlush(previousDate, previousStats);
+  await queueReportFlush(previousDate, previousStats);
+  await dailyStatsLoadPromise;
 }
 
 function registerExitHooks() {
@@ -194,13 +292,7 @@ function registerExitHooks() {
       return reportFlushChain;
     }
 
-    const statsSnapshot = {
-      appearancesByHour: { ...dailyStats.appearancesByHour },
-      disappearancesByHour: { ...dailyStats.disappearancesByHour },
-      lifetimes: [...dailyStats.lifetimes],
-      totalAppeared: dailyStats.totalAppeared,
-      totalDisappeared: dailyStats.totalDisappeared,
-    };
+    const statsSnapshot = createStatsSnapshot(dailyStats);
 
     return queueReportFlush(currentStatsDate, statsSnapshot);
   };
@@ -233,19 +325,7 @@ async function processSlots(currentSlots) {
     const currentSlotsMap = new Map();
     const appearedSlots = [];
     const disappearedSlots = [];
-
-    if (lastSlotsMap.size === 0) {
-      console.log("TRACKER INIT - seeding state (no logs)");
-
-      for (const slot of currentSlots) {
-        const slotKey = buildSlotKey(slot);
-        currentSlotsMap.set(slotKey, Date.now());
-      }
-
-      lastSlotsMap = currentSlotsMap;
-      await saveState(lastSlotsMap);
-      return;
-    }
+    const isInitialSeed = lastSlotsMap.size === 0;
 
     for (const slot of currentSlots) {
       const slotKey = buildSlotKey(slot);
@@ -253,7 +333,7 @@ async function processSlots(currentSlots) {
 
       currentSlotsMap.set(slotKey, firstSeenTimestamp);
 
-      if (!lastSlotsMap.has(slotKey)) {
+      if (!lastSlotsMap.has(slotKey) && !isInitialSeed) {
         appearedSlots.push(slotKey);
       }
     }
@@ -279,6 +359,8 @@ async function processSlots(currentSlots) {
       dailyStats.disappearancesByHour[nowParts.hour] += 1;
       dailyStats.totalDisappeared += 1;
       dailyStats.lifetimes.push(disappearedSlot.lifetimeSec);
+      dailyStats.lifetimeSum += disappearedSlot.lifetimeSec;
+      dailyStats.lifetimeCount += 1;
       await appendEvent(
         createEvent(
           "DISAPPEARED",
@@ -291,6 +373,7 @@ async function processSlots(currentSlots) {
 
     lastSlotsMap = currentSlotsMap;
     await saveState(lastSlotsMap);
+    await queueReportFlush(currentStatsDate, createStatsSnapshot(dailyStats));
   } catch (error) {
     console.error("activityTracker process failed:", error);
   }
