@@ -304,7 +304,9 @@ async function runWatcher() {
                 errorMessage.includes("PAGE_NOT_AVAILABLE") ||
                 errorMessage.includes("Target page, context or browser has been closed")
               ) {
-                console.log("BOOKER PAGE LOST -> RESET SESSION");
+                console.log("BOOKER PAGE LOST -> HARD RESET");
+
+                await resetBrowser();   // 🔥 BRAKOWAŁO
                 session = null;
               }
             } finally {
