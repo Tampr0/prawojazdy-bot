@@ -133,7 +133,9 @@ async function fetchWithRetry(fn, retries = 3) {
     try {
       return await fn();
     } catch (err) {
-      console.log("FETCH ERROR, retry:", i + 1);
+      if (i === retries) {
+        console.log("FETCH FAILED after retries");
+      }
 
       if (i === retries) {
         throw err;

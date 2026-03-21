@@ -6,7 +6,7 @@ dotenv.config();
 function loadConfig() {
   const targetUrl = process.env.TARGET_URL;
 
-  
+
   if (!targetUrl) {
     throw new Error("Missing required environment variable: TARGET_URL");
   }
@@ -32,7 +32,8 @@ function loadConfig() {
     ),
     payloadJson: process.env.EXAM_SCHEDULE_PAYLOAD_JSON || "",
     slotMinDays: Number(process.env.SLOT_MIN_DAYS || 0),
-slotMaxDays: Number(process.env.SLOT_MAX_DAYS || 999),
+    slotMaxDays: Number(process.env.SLOT_MAX_DAYS || 999),
+    debug: process.env.DEBUG === "true",
   };
 }
 

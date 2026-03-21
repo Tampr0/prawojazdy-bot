@@ -229,7 +229,7 @@ async function triggerExamScheduleRequest(page) {
   await page.getByPlaceholder(/Wybierz o/i).click();
   await page.getByRole("button", { name: /WORD Wroc/i }).click();
   await acceptCookies(page);
-  console.log("SELECT CATEGORY STEP");
+  
   await page.mouse.wheel(0, 400);
   const categoryInput = page.getByPlaceholder("Wybierz kategorię");
   await categoryInput.scrollIntoViewIfNeeded();
@@ -238,7 +238,7 @@ async function triggerExamScheduleRequest(page) {
   await page.keyboard.type("B");
   await page.waitForTimeout(500);
   await page.keyboard.press("Enter");
-  console.log("CATEGORY SELECTED VIA KEYBOARD");
+  
   await page.getByRole("button", { name: /Dalej/i }).click();
   await page.locator('input[type="radio"]').nth(1).click();
 }
@@ -338,9 +338,9 @@ async function loginAndCaptureSession(config = loadConfig()) {
       ],
       login
     );
-    console.log("FILL LOGIN");
+    
 
-    console.log("FILL PASSWORD");
+    
     await page.waitForSelector('input[type="password"]');
 
     try {
@@ -348,7 +348,7 @@ async function loginAndCaptureSession(config = loadConfig()) {
     } catch (error) {
       await page.locator('input[type="password"]').fill(password);
     }
-    console.log("FILL PASSWORD");
+    
 
     await Promise.all([
       page.waitForLoadState("domcontentloaded").catch(() => { }),
@@ -365,7 +365,7 @@ async function loginAndCaptureSession(config = loadConfig()) {
     }
 
     for (let i = 0; i < 3; i++) {
-      console.log("CURRENT URL:", page.url());
+      
       if (page.url().includes("/new/konto")) {
         console.log("FORCE CLICK FLOW");
         await acceptCookies(page);

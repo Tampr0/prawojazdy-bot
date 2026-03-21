@@ -267,8 +267,7 @@ async function processSlots(currentSlots) {
       }
     }
 
-    console.log("APPEARED:", appearedSlots.length);
-    console.log("DISAPPEARED:", disappearedSlots.length);
+    
 
     for (const slotKey of appearedSlots) {
       dailyStats.appearancesByHour[nowParts.hour] += 1;

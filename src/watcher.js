@@ -213,8 +213,7 @@ async function runWatcher() {
         return ts >= minTs && ts <= maxTs;
       });
 
-      console.log("FULL TERMS:", practicalTerms.length);
-      console.log("FILTERED TERMS:", filteredByRange.length);
+    
 
       if (practicalTerms.length === 0) {
         logInfo("Brak terminow praktycznych");
