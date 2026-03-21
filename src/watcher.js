@@ -7,6 +7,7 @@ const { logInfo, logError } = require("./logger");
 const { ensureSession, getSessionPage, resetBrowser } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
+const activityTracker = require("./activityTracker");
 
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
@@ -185,6 +186,8 @@ async function runWatcher() {
       consecutiveFetchFailures = 0;
       const practicalTerms = getPracticalTerms(responseData, payload);
 
+      void activityTracker.processSlots(practicalTerms);
+
       const now = Date.now();
       if (DEBUG) {
         const minTs = now + config.slotMinDays * 24 * 60 * 60 * 1000;
@@ -209,6 +212,9 @@ async function runWatcher() {
         const ts = new Date(slot.date).getTime();
         return ts >= minTs && ts <= maxTs;
       });
+
+      console.log("FULL TERMS:", practicalTerms.length);
+      console.log("FILTERED TERMS:", filteredByRange.length);
 
       if (practicalTerms.length === 0) {
         logInfo("Brak terminow praktycznych");
