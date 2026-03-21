@@ -7,6 +7,9 @@ module.exports = {
   logInfo(message) {
     console.log(formatMessage("INFO", message));
   },
+  logStatus(message) {
+    process.stdout.write(`\r${message}`);
+  },
   logError(message, error) {
     console.error(formatMessage("ERROR", message));
 

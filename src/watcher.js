@@ -3,7 +3,7 @@ const { loadConfig } = require("./config");
 const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
 const { bookSlotAPI } = require("./bookerApi");
-const { logInfo, logError } = require("./logger");
+const { logInfo, logError, logStatus } = require("./logger");
 const { ensureSession, getSessionPage, resetBrowser } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
@@ -19,6 +19,7 @@ const MAX_LOGGED_TERMS = 10;
 const MAX_CONSECUTIVE_FETCH_FAILURES = 3;
 const sentSlots = new Set();
 let bookingInProgress = false;
+let statusDots = "";
 
 function getNextInterval() {
   return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000); // +0–3s
@@ -156,6 +157,15 @@ function isNetworkFetchError(errorMessage) {
   );
 }
 
+function getDots() {
+  statusDots = statusDots.length >= 3 ? "" : `${statusDots}.`;
+  return statusDots;
+}
+
+function startEventLine() {
+  console.log("");
+}
+
 
 async function runWatcher() {
   const config = loadConfig();
@@ -173,11 +183,10 @@ async function runWatcher() {
 
   while (true) {
     try {
-      console.log("SESSION STATE:", session ? "OK" : "MISSING");
       if (!session) {
+        startEventLine();
         console.log("NO SESSION -> creating...");
         session = await ensureSession(config);
-        console.log("SESSION STATE:", session ? "OK" : "MISSING");
         console.log("SESSION READY");
       }
 
@@ -212,16 +221,12 @@ async function runWatcher() {
         const ts = new Date(slot.date).getTime();
         return ts >= minTs && ts <= maxTs;
       });
+      const statusTime = new Date().toLocaleTimeString("pl-PL");
+      const status = `STATUS${getDots()} | ${statusTime} | slots: ${filteredByRange.length} | session: ${session ? "OK" : "NO"}`;
+      logStatus(status);
 
-    
-
-      if (practicalTerms.length === 0) {
-        logInfo("Brak terminow praktycznych");
-      } else {
-        logInfo(`Znaleziono ${filteredByRange.length} terminow w zakresie.`);
-
+      if (practicalTerms.length !== 0) {
         if (filteredByRange.length === 0) {
-          logInfo("Brak slotow w zadanym zakresie dni");
           await saveJson(config.debugSlotsFilePath, practicalTerms);
           await sleep(getNextInterval());
           continue;
@@ -236,9 +241,8 @@ async function runWatcher() {
           console.log("NEW SLOTS:", newSlots.length);
         }
 
-        if (newSlots.length === 0 && !FORCE_BOOKING) {
-          logInfo("Brak nowych slotow");
-        } else {
+        if (!(newSlots.length === 0 && !FORCE_BOOKING)) {
+          startEventLine();
           const notifiedSlots = await notify(newSlots);
           const slotsToSave = notifiedSlots;
 
@@ -255,6 +259,7 @@ async function runWatcher() {
               let page = getSessionPage();
 
               if (!page || page.isClosed()) {
+                startEventLine();
                 console.log("BOOKER PAGE CLOSED -> HARD RESET");
 
                 await resetBrowser();   // 🔥
@@ -269,9 +274,11 @@ async function runWatcher() {
               const slot = newSlots[0];
 
               if (!slot || !slot.id) {
+                startEventLine();
                 console.log("INVALID SLOT - SKIP");
               } else {
                 try {
+                  startEventLine();
                   console.log("TRY API BOOKING:", slot);
                   console.log("FULL SLOT DEBUG:", JSON.stringify(slot, null, 2));
 
@@ -284,7 +291,7 @@ async function runWatcher() {
 
                   await page.goto(paymentUrl);
 
-
+                  startEventLine();
                   await sendTelegramMessage(
                     `🔥 SLOT ZAREZERWOWANY API
 
@@ -295,12 +302,14 @@ async function runWatcher() {
                     ${paymentUrl}`
                   );
                 } catch (apiError) {
+                  startEventLine();
                   console.log("API BOOK FAILED -> fallback to Playwright", apiError);
 
                   await runBooker(page);
                 }
               }
             } catch (err) {
+              startEventLine();
               console.error("BOOKING ERROR:", err);
 
               const errorMessage = String(err?.message || err);
@@ -309,6 +318,7 @@ async function runWatcher() {
                 errorMessage.includes("PAGE_NOT_AVAILABLE") ||
                 errorMessage.includes("Target page, context or browser has been closed")
               ) {
+                startEventLine();
                 console.log("BOOKER PAGE LOST -> HARD RESET");
 
                 await resetBrowser();   // 🔥 BRAKOWAŁO
@@ -332,6 +342,7 @@ async function runWatcher() {
         errorMessage.includes("<!DOCTYPE html") ||
         errorMessage.includes("<html")
       ) {
+        startEventLine();
         console.log("SESSION EXPIRED DETECTED -> HARD RESET");
 
         await resetBrowser();   // 🔥 KLUCZOWE
@@ -344,17 +355,20 @@ async function runWatcher() {
         consecutiveFetchFailures += 1;
 
         if (consecutiveFetchFailures >= MAX_CONSECUTIVE_FETCH_FAILURES) {
+          startEventLine();
           console.log("TOO MANY FETCH FAILURES -> HARD RESET");
 
           await resetBrowser();   // 🔥 DODAJ
           session = null;
         }
 
+        startEventLine();
         logError("Blad sieci podczas pobierania terminarza.", error);
         await sleep(FETCH_FAILURE_COOLDOWN_MS);
         continue;
       }
 
+      startEventLine();
       logError("Blad podczas pobierania terminarza.", error);
     }
 
