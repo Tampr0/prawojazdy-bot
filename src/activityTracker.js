@@ -234,6 +234,19 @@ async function processSlots(currentSlots) {
     const appearedSlots = [];
     const disappearedSlots = [];
 
+    if (lastSlotsMap.size === 0) {
+      console.log("TRACKER INIT - seeding state (no logs)");
+
+      for (const slot of currentSlots) {
+        const slotKey = buildSlotKey(slot);
+        currentSlotsMap.set(slotKey, Date.now());
+      }
+
+      lastSlotsMap = currentSlotsMap;
+      await saveState(lastSlotsMap);
+      return;
+    }
+
     for (const slot of currentSlots) {
       const slotKey = buildSlotKey(slot);
       const firstSeenTimestamp = lastSlotsMap.get(slotKey) ?? now;
