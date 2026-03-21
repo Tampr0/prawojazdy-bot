@@ -4,7 +4,7 @@ const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
 const { bookSlotAPI } = require("./bookerApi");
 const { logInfo, logError } = require("./logger");
-const { ensureSession, getSessionPage } = require("./session");
+const { ensureSession, getSessionPage, resetBrowser } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 
@@ -323,8 +323,11 @@ async function runWatcher() {
         errorMessage.includes("<!DOCTYPE html") ||
         errorMessage.includes("<html")
       ) {
-        console.log("SESSION EXPIRED DETECTED");
+        console.log("SESSION EXPIRED DETECTED -> HARD RESET");
+
+        await resetBrowser();   // 🔥 KLUCZOWE
         session = null;
+
         continue;
       }
 

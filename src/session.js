@@ -10,6 +10,19 @@ let ensureSessionPromise = null;
 let sharedContext = null;
 let sharedPage = null;
 
+async function resetBrowser() {
+  console.log("RESETTING BROWSER CONTEXT");
+
+  if (sharedContext) {
+    try {
+      await sharedContext.close();
+    } catch {}
+  }
+
+  sharedContext = null;
+  sharedPage = null;
+}
+
 async function launchBrowserContext() {
   return chromium.launchPersistentContext(USER_DATA_DIR, {
     channel: "chrome",
@@ -32,7 +45,7 @@ async function ensureSharedPage() {
   if (sharedContext) {
     try {
       await sharedContext.close();
-    } catch {}
+    } catch { }
     sharedContext = null;
     sharedPage = null;
   }
@@ -291,9 +304,28 @@ async function loginAndCaptureSession(config = loadConfig()) {
       return null;
     }
 
-    await page.goto(config.targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
+    console.log("RESET PAGE BEFORE LOGIN");
+
+    await page.goto("about:blank");
+    await page.waitForTimeout(500);
+
+    await page.goto(config.targetUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
+
     await acceptCookies(page);
-    await clickVisible(page, "Zaloguj");
+
+    try {
+      await clickVisible(page, "Zaloguj");
+    } catch {
+      console.log("LOGIN BUTTON NOT FOUND -> FORCE RESET FLOW");
+
+      await page.goto("https://info-car.pl/new");
+      await page.waitForTimeout(1000);
+
+      await clickVisible(page, "Zaloguj");
+    }
 
     console.log("FILL LOGIN");
     await fillVisible(
@@ -438,4 +470,5 @@ module.exports = {
   getSessionPage: () => (sharedPage && !sharedPage.isClosed() ? sharedPage : null),
   saveSession,
   loadSession,
+  resetBrowser, // 🔥 DODANE
 };
