@@ -180,6 +180,7 @@ async function runWatcher() {
   }
 
   logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
+  startEventLine();
 
   while (true) {
     try {
@@ -187,6 +188,7 @@ async function runWatcher() {
         startEventLine();
         console.log("NO SESSION -> creating...");
         session = await ensureSession(config);
+        startEventLine();
         console.log("SESSION READY");
       }
 
@@ -221,7 +223,11 @@ async function runWatcher() {
         const ts = new Date(slot.date).getTime();
         return ts >= minTs && ts <= maxTs;
       });
-      const statusTime = new Date().toLocaleTimeString("pl-PL");
+      const statusTime = new Date().toLocaleTimeString("pl-PL", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
       const status = `STATUS${getDots()} | ${statusTime} | slots: ${filteredByRange.length} | session: ${session ? "OK" : "NO"}`;
       logStatus(status);
 
