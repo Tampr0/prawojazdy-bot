@@ -337,6 +337,9 @@ async function runWatcher() {
         consecutiveFetchFailures += 1;
 
         if (consecutiveFetchFailures >= MAX_CONSECUTIVE_FETCH_FAILURES) {
+          console.log("TOO MANY FETCH FAILURES -> HARD RESET");
+
+          await resetBrowser();   // 🔥 DODAJ
           session = null;
         }
 
