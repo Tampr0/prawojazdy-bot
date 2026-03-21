@@ -3,6 +3,7 @@ const path = require("path");
 
 const ACTIVITY_LOG_FILE = path.resolve(process.cwd(), "activity-log.jsonl");
 const DAILY_REPORT_FILE = path.resolve(process.cwd(), "daily-report.json");
+const STATE_FILE = path.resolve(process.cwd(), "activity-state.json");
 const HOUR_KEYS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
 
 let lastSlotsMap = new Map();
@@ -10,6 +11,7 @@ let currentStatsDate = null;
 let dailyStats = createEmptyDailyStats();
 let reportFlushChain = Promise.resolve();
 let exitHooksRegistered = false;
+let stateLoadPromise = null;
 
 function createEmptyHourlyStats() {
   return Object.fromEntries(HOUR_KEYS.map((hour) => [hour, 0]));
@@ -83,6 +85,45 @@ async function loadReport() {
 
     throw error;
   }
+}
+
+async function loadState() {
+  try {
+    const raw = await fs.readFile(STATE_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    return new Map(Object.entries(parsed.slots || {}));
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return new Map();
+    }
+
+    throw error;
+  }
+}
+
+async function saveState(map) {
+  const slots = Object.fromEntries(map);
+  await fs.writeFile(STATE_FILE, JSON.stringify({ slots }, null, 2), "utf8");
+}
+
+async function ensureStateLoaded() {
+  if (!stateLoadPromise) {
+    stateLoadPromise = loadState()
+      .then((loadedState) => {
+        lastSlotsMap = new Map(
+          Array.from(loadedState.entries(), ([slotKey, firstSeenTimestamp]) => [
+            slotKey,
+            Number(firstSeenTimestamp),
+          ])
+        );
+      })
+      .catch((error) => {
+        stateLoadPromise = null;
+        throw error;
+      });
+  }
+
+  await stateLoadPromise;
 }
 
 function buildReportEntry(stats) {
@@ -183,6 +224,8 @@ async function processSlots(currentSlots) {
   registerExitHooks();
 
   try {
+    await ensureStateLoaded();
+
     const now = Date.now();
     const nowParts = getWarsawDateParts(new Date(now));
     await ensureStatsDate(nowParts);
@@ -235,6 +278,7 @@ async function processSlots(currentSlots) {
     }
 
     lastSlotsMap = currentSlotsMap;
+    await saveState(lastSlotsMap);
   } catch (error) {
     console.error("activityTracker process failed:", error);
   }
