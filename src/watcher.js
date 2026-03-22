@@ -12,7 +12,7 @@ const activityTracker = require("./activityTracker");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 15000;
+const POLL_INTERVAL_MS = 5000;
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -271,7 +271,7 @@ async function runWatcher() {
 
               if (!page || page.isClosed()) {
                 startEventLine();
-                console.log("BOOKER PAGE CLOSED -> HARD RESET");
+                logError("BOOKER PAGE CLOSED -> HARD RESET");
 
                 await resetBrowser();   // 🔥
                 session = await ensureSession(config, { forceRefresh: true });
@@ -286,7 +286,7 @@ async function runWatcher() {
 
               if (!slot || !slot.id) {
                 startEventLine();
-                console.log("INVALID SLOT - SKIP");
+                logInfo("INVALID SLOT - SKIP");
               } else {
                 try {
                   startEventLine();
@@ -322,7 +322,7 @@ async function runWatcher() {
               }
             } catch (err) {
               startEventLine();
-              console.error("BOOKING ERROR:", err);
+              logError("BOOKING ERROR", err);
 
               const errorMessage = String(err?.message || err);
 
@@ -369,7 +369,7 @@ async function runWatcher() {
 
         if (consecutiveFetchFailures >= MAX_CONSECUTIVE_FETCH_FAILURES) {
           startEventLine();
-          console.log("TOO MANY FETCH FAILURES -> HARD RESET");
+          logError("TOO MANY FETCH FAILURES -> HARD RESET");
 
           await resetBrowser();   // 🔥 DODAJ
           session = null;

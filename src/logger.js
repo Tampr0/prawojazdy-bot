@@ -1,3 +1,10 @@
+const fs = require("fs");
+
+function writeErrorToFile(message) {
+  const line = message + "\n";
+  fs.appendFileSync("errors.log", line);
+}
+
 function getLocalTimestamp() {
   return new Date()
     .toLocaleString("sv-SE", {
@@ -26,10 +33,15 @@ module.exports = {
     lastStatusLength = message.length;
   },
   logError(message, error) {
-    console.error(formatMessage("ERROR", message));
+    const formatted = formatMessage("ERROR", message);
+
+    console.error(formatted);
+    writeErrorToFile(formatted);
 
     if (error) {
       console.error(error);
+      const errorDetails = error.stack || error.toString();
+      writeErrorToFile(formatMessage("ERROR", errorDetails) + "\n");
     }
   },
 };
