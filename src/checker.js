@@ -126,8 +126,8 @@ async function fetchSchedule(session, payload, config) {
   return JSON.parse(text);
 }
 
-async function fetchWithRetry(fn, retries = 3) {
-  const delaysMs = [2000, 5000, 10000];
+async function fetchWithRetry(fn, retries = 4) {
+  const delaysMs = [5000, 2000, 1000, 1000];
 
   for (let i = 0; i <= retries; i++) {
     try {
