@@ -168,8 +168,11 @@ function startEventLine() {
 
 
 async function runWatcher() {
+  // let iteration = 0;
+  // const MAX_ITERATIONS = 3; // TEST MODE - iteracje odpaleń + do odznaczenia na dole funkcji
   const config = loadConfig();
-  const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
+  // const loadedSlots = await loadSeenSlots(config.seenSlotsFilePath);
+  const loadedSlots = new Set(); // TEST MODE - disable seen slots
   let session = null;
   let consecutiveFetchFailures = 0;
 
@@ -238,10 +241,12 @@ async function runWatcher() {
           continue;
         }
 
-        const newSlots = filteredByRange.filter((slot) => {
-          const key = buildSlotKey(slot);
-          return !sentSlots.has(key);
-        });
+        // const newSlots = filteredByRange.filter((slot) => {
+        //   const key = buildSlotKey(slot);
+        //   return !sentSlots.has(key);
+        // });
+
+        const newSlots = filteredByRange; // TEST MODE - always try booking
 
         if (DEBUG) {
           console.log("NEW SLOTS:", newSlots.length);
@@ -256,7 +261,7 @@ async function runWatcher() {
             sentSlots.add(buildSlotKey(term));
           }
 
-          await saveSeenSlots(config.seenSlotsFilePath, sentSlots);
+          // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
           if (!bookingInProgress) {
             bookingInProgress = true;
@@ -286,6 +291,7 @@ async function runWatcher() {
                 try {
                   startEventLine();
                   console.log("TRY API BOOKING:", slot);
+                  console.log("BOOKING TIMESTAMP:", new Date().toISOString());
                   console.log("FULL SLOT DEBUG:", JSON.stringify(slot, null, 2));
 
                   const result = await bookSlotAPI(session, slot);
@@ -349,7 +355,8 @@ async function runWatcher() {
         errorMessage.includes("<html")
       ) {
         startEventLine();
-        console.log("SESSION EXPIRED DETECTED -> HARD RESET");
+
+        logError("SESSION EXPIRED DETECTED -> HARD RESET");
 
         await resetBrowser();   // 🔥 KLUCZOWE
         session = null;
@@ -379,7 +386,10 @@ async function runWatcher() {
     }
 
     await sleep(POLL_INTERVAL_MS);
+
   }
+  // console.log("TEST DONE - exiting"); // odznaczyć jeśli chcemy aby iterował ilość odpaleń
+  // process.exit(0);
 }
 
 module.exports = {

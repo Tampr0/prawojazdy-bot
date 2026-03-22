@@ -355,3 +355,14 @@
 {"type":"APPEARED","source":"FULL","slotKey":"2026-05-06T12:30:00_12:30:00_3_PRACTICAL","date":"2026-03-21","time":"20:15:26","ts":"2026-03-21T19:15:26.369Z"}
 {"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-07T12:30:00_12:30:00_3_PRACTICAL","date":"2026-03-21","time":"20:16:31","ts":"2026-03-21T19:16:31.611Z","lifetimeSec":6086}
 {"type":"APPEARED","source":"FULL","slotKey":"2026-05-07T12:30:00_12:30:00_3_PRACTICAL","date":"2026-03-21","time":"20:24:47","ts":"2026-03-21T19:24:47.561Z"}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-05T07:20:00_07:20:00_3_PRACTICAL","date":"2026-03-21","time":"22:49:07","ts":"2026-03-21T21:49:07.094Z","lifetimeSec":14633}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-05T07:40:00_07:40:00_3_PRACTICAL","date":"2026-03-21","time":"22:56:23","ts":"2026-03-21T21:56:23.290Z","lifetimeSec":15678}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-05T13:50:00_13:50:00_3_PRACTICAL","date":"2026-03-21","time":"23:20:39","ts":"2026-03-21T22:20:39.413Z","lifetimeSec":13551}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-05T14:40:00_14:40:00_3_PRACTICAL","date":"2026-03-22","time":"00:54:32","ts":"2026-03-21T23:54:32.315Z","lifetimeSec":22767}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-05T07:20:00_07:20:00_3_PRACTICAL","date":"2026-03-22","time":"06:05:29","ts":"2026-03-22T05:05:29.857Z"}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-05T07:40:00_07:40:00_3_PRACTICAL","date":"2026-03-22","time":"06:05:29","ts":"2026-03-22T05:05:29.858Z"}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-05T13:50:00_13:50:00_3_PRACTICAL","date":"2026-03-22","time":"06:05:29","ts":"2026-03-22T05:05:29.859Z"}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-05T14:40:00_14:40:00_3_PRACTICAL","date":"2026-03-22","time":"06:05:29","ts":"2026-03-22T05:05:29.860Z"}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-11T09:40:00_09:40:00_3_PRACTICAL","date":"2026-03-22","time":"08:35:20","ts":"2026-03-22T07:35:20.130Z","lifetimeSec":50414}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-11T10:30:00_10:30:00_3_PRACTICAL","date":"2026-03-22","time":"08:41:27","ts":"2026-03-22T07:41:27.583Z","lifetimeSec":50782}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-11T09:40:00_09:40:00_3_PRACTICAL","date":"2026-03-22","time":"08:44:28","ts":"2026-03-22T07:44:28.099Z"}

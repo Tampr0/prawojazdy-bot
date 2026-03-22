@@ -43,17 +43,31 @@ async function bookSlotAPI(session, slot) {
     body: JSON.stringify(payload),
   });
 
+  const status = response.status;
+  const headers = Object.fromEntries(response.headers.entries());
   const text = await response.text();
 
+  console.log("=== BOOKING RESPONSE DEBUG ===");
+  console.log("STATUS:", status);
+  console.log("HEADERS:", headers);
+  console.log("RAW BODY:", text);
+  console.log("=== END RESPONSE DEBUG ===");
+
   if (!response.ok) {
-    throw new Error(`BOOKING_API_ERROR: ${response.status} ${text}`);
+    throw new Error(`BOOKING_API_ERROR: ${status} ${text}`);
   }
 
+  let parsed;
+
   try {
-    return JSON.parse(text);
+    parsed = JSON.parse(text);
   } catch {
-    return { raw: text };
+    parsed = { raw: text };
   }
+
+  console.log("PARSED BODY:", JSON.stringify(parsed, null, 2));
+
+  return parsed;
 }
 
 module.exports = {
