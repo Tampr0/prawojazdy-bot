@@ -3,7 +3,7 @@ const { loadConfig } = require("./config");
 const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
 const { bookSlotAPI } = require("./bookerApi");
-const { logInfo, logError, logStatus } = require("./logger");
+const { logInfo, logError, logStatus, logFetchHeader } = require("./logger");
 const { ensureSession, getSessionPage, resetBrowser } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
@@ -12,7 +12,7 @@ const activityTracker = require("./activityTracker");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 5000;
+const POLL_INTERVAL_MS = 10000;
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -22,7 +22,7 @@ let bookingInProgress = false;
 let statusDots = "";
 
 function getNextInterval() {
-  return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000); // +0–3s
+  return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000); // +0–2s
 }
 
 function sleep(ms) {
@@ -183,6 +183,10 @@ async function runWatcher() {
   }
 
   logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
+  logFetchHeader({
+    pollInterval: POLL_INTERVAL_MS,
+    retryDelays: [3000, 4000, 5000, 6000],
+  });
   startEventLine();
 
   while (true) {

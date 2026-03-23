@@ -126,21 +126,41 @@ async function fetchSchedule(session, payload, config) {
   return JSON.parse(text);
 }
 
+const { logFetch } = require("./logger");
+
 async function fetchWithRetry(fn, retries = 4) {
-  const delaysMs = [5000, 2000, 1000, 1000];
+  const delaysMs = [3000, 4000, 5000, 6000];
+
+  const startTime = Date.now();
+  let attempt = 0;
 
   for (let i = 0; i <= retries; i++) {
+    const attemptStart = Date.now();
+
     try {
-      return await fn();
-    } catch (err) {
-      if (i === retries) {
-        console.log(""); // reset status line
-        console.log("FETCH FAILED after retries");
+      const result = await fn();
+
+      const duration = Date.now() - attemptStart;
+
+      if (attempt === 0) {
+        logFetch(`FETCH_OK duration=${duration}ms`);
+      } else {
+        const totalDelay = Date.now() - startTime;
+        logFetch(`FETCH_RECOVERED retries=${attempt} totalDelay=${totalDelay}ms`);
       }
 
+      return result;
+    } catch (err) {
+      attempt++;
+
+      const duration = Date.now() - attemptStart;
+
       if (i === retries) {
+        logFetch(`FETCH_FAILED retries=${attempt} totalTime=${Date.now() - startTime}ms`);
         throw err;
       }
+
+      logFetch(`FETCH_RETRY_${attempt} duration=${duration}ms`);
 
       const delayMs = delaysMs[Math.min(i, delaysMs.length - 1)];
       await new Promise((resolve) => setTimeout(resolve, delayMs));

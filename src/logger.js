@@ -21,6 +21,29 @@ function formatMessage(level, message) {
 
 let lastStatusLength = 0;
 
+const FETCH_LOG_FILE = "fetch-log.txt";
+
+function logFetch(message) {
+  const timestamp = getLocalTimestamp();
+  const line = `[${timestamp}] ${message}\n`;
+  fs.appendFileSync(FETCH_LOG_FILE, line);
+}
+
+function logFetchHeader(config) {
+  const timestamp = getLocalTimestamp();
+
+  const header = `
+==================================================
+[${timestamp}] NEW TEST START
+
+POLL_INTERVAL_MS=${config.pollInterval}
+RETRY_DELAYS_MS=${JSON.stringify(config.retryDelays)}
+
+==================================================\n`;
+
+  fs.appendFileSync(FETCH_LOG_FILE, header);
+}
+
 module.exports = {
   logInfo(message) {
     console.log(formatMessage("INFO", message));
@@ -43,5 +66,8 @@ module.exports = {
       const errorDetails = error.stack || error.toString();
       writeErrorToFile(formatMessage("ERROR", errorDetails) + "\n");
     }
-  },
+  }, 
+  logFetch,
+  logFetchHeader,
+
 };
