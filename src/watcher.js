@@ -13,6 +13,8 @@ const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
 const POLL_INTERVAL_MS = 10000;
+const BOOKING_LOOP_DELAY_MS = 1500; // 1.5s między próbami
+const BOOKING_MAX_ROUNDS = 20; // ile razy przejechać po liście
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -182,7 +184,7 @@ async function runWatcher() {
     sentSlots.add(slotKey);
   }
 
-  logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
+  logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 10000}s`);
   logFetchHeader({
     pollInterval: POLL_INTERVAL_MS,
     retryDelays: [3000, 4000, 5000, 6000],
@@ -267,83 +269,66 @@ async function runWatcher() {
 
           // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
-          if (!bookingInProgress) {
-            bookingInProgress = true;
+          startEventLine();
+          console.log("🔥 ALL-IN BOOKING START");
 
-            try {
-              let page = getSessionPage();
+          let bookingSuccess = false;
 
-              if (!page || page.isClosed()) {
-                startEventLine();
-                logError("BOOKER PAGE CLOSED -> HARD RESET");
+          for (let round = 0; round < BOOKING_MAX_ROUNDS; round++) {
+            console.log(`BOOKING ROUND: ${round + 1}/${BOOKING_MAX_ROUNDS}`);
 
-                await resetBrowser();   // 🔥
-                session = await ensureSession(config, { forceRefresh: true });
-                page = getSessionPage();
-              }
+            for (const slot of newSlots) {
+              if (!slot || !slot.id) continue;
 
-              if (!page || page.isClosed()) {
-                throw new Error("PAGE_NOT_AVAILABLE");
-              }
+              try {
+                console.log("TRY API BOOKING:", slot.id, slot.date, slot.time);
 
-              const slot = newSlots[0];
+                const result = await bookSlotAPI(session, slot);
 
-              if (!slot || !slot.id) {
-                startEventLine();
-                logInfo("INVALID SLOT - SKIP");
-              } else {
-                try {
-                  startEventLine();
-                  console.log("TRY API BOOKING:", slot);
-                  console.log("BOOKING TIMESTAMP:", new Date().toISOString());
-                  console.log("FULL SLOT DEBUG:", JSON.stringify(slot, null, 2));
+                console.log("BOOK RESPONSE:", result);
 
-                  const result = await bookSlotAPI(session, slot);
+                const paymentUrl = `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${result.id}/platnosc`;
 
-                  console.log("API BOOK SUCCESS:", result);
-                  const paymentUrl = `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${result.id}/platnosc`;
+                console.log("PAYMENT URL:", paymentUrl);
 
-                  console.log("OPEN PAYMENT:", paymentUrl);
-
-                  await page.goto(paymentUrl);
-
-                  startEventLine();
+                // 🔴 TU NIE UFAMY 201
+                if (result && result.id) {
                   await sendTelegramMessage(
-                    `🔥 SLOT ZAREZERWOWANY API
+                    `🔥 PRÓBA REZERWACJI
 
                     📅 ${slot.date}
                     ⏰ ${slot.time}
 
-                    💳 PŁATNOŚĆ:
+                    💳 LINK:
                     ${paymentUrl}`
                   );
-                } catch (apiError) {
-                  startEventLine();
-                  console.log("API BOOK FAILED -> fallback to Playwright", apiError);
-
-                  await runBooker(page);
                 }
+
+              } catch (apiError) {
+                const msg = String(apiError?.message || apiError);
+
+                console.log("BOOK ERROR:", msg);
+
+                // 🔥 TU traktujemy 422 jako potencjalny sukces
+                if (msg.includes("422")) {
+                  console.log("🔥 POSSIBLE SUCCESS (422) - STOP LOOP");
+
+                  await sendTelegramMessage("🔥 422 - PRAWDOPODOBNIE MAMY REZERWACJĘ");
+
+                  bookingSuccess = true;
+                  break;
+                }
+
+                // inne błędy → lecimy dalej
               }
-            } catch (err) {
-              startEventLine();
-              logError("BOOKING ERROR", err);
 
-              const errorMessage = String(err?.message || err);
-
-              if (
-                errorMessage.includes("PAGE_NOT_AVAILABLE") ||
-                errorMessage.includes("Target page, context or browser has been closed")
-              ) {
-                startEventLine();
-                console.log("BOOKER PAGE LOST -> HARD RESET");
-
-                await resetBrowser();   // 🔥 BRAKOWAŁO
-                session = null;
-              }
-            } finally {
-              bookingInProgress = false;
+              await sleep(BOOKING_LOOP_DELAY_MS);
             }
+
+            if (bookingSuccess) break;
           }
+
+          console.log("🔥 ALL-IN BOOKING END");
         }
       }
 
