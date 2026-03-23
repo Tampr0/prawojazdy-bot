@@ -5924,3 +5924,59 @@ RETRY_DELAYS_MS=[3000,4000,5000,6000]
 [2026-03-23T16:35:08] FETCH_OK duration=87ms
 [2026-03-23T16:35:20] FETCH_OK duration=84ms
 [2026-03-23T16:35:33] FETCH_OK duration=84ms
+
+==================================================
+[2026-03-23T17:45:05] NEW TEST START
+
+POLL_INTERVAL_MS=10000
+RETRY_DELAYS_MS=[3000,4000,5000,6000]
+
+==================================================
+[2026-03-23T17:45:17] FETCH_RETRY_1 duration=162ms
+[2026-03-23T17:45:20] FETCH_RETRY_2 duration=56ms
+[2026-03-23T17:45:24] FETCH_RECOVERED retries=2 totalDelay=7352ms
+
+==================================================
+[2026-03-23T17:45:40] NEW TEST START
+
+POLL_INTERVAL_MS=10000
+RETRY_DELAYS_MS=[3000,4000,5000,6000]
+
+==================================================
+[2026-03-23T17:46:00] FETCH_RETRY_1 duration=144ms
+[2026-03-23T17:46:03] FETCH_RETRY_2 duration=53ms
+[2026-03-23T17:46:07] FETCH_RECOVERED retries=2 totalDelay=7301ms
+[2026-03-23T17:46:19] FETCH_OK duration=79ms
+
+==================================================
+[2026-03-23T17:46:31] NEW TEST START
+
+POLL_INTERVAL_MS=10000
+RETRY_DELAYS_MS=[3000,4000,5000,6000]
+
+==================================================
+[2026-03-23T17:46:49] FETCH_RETRY_1 duration=154ms
+[2026-03-23T17:46:53] FETCH_RETRY_2 duration=52ms
+[2026-03-23T17:46:57] FETCH_RECOVERED retries=2 totalDelay=7315ms
+
+==================================================
+[2026-03-23T17:55:14] NEW TEST START
+
+POLL_INTERVAL_MS=10000
+RETRY_DELAYS_MS=[3000,4000,5000,6000]
+
+==================================================
+[2026-03-23T17:55:33] FETCH_RETRY_1 duration=156ms
+[2026-03-23T17:55:36] FETCH_RETRY_2 duration=53ms
+[2026-03-23T17:55:40] FETCH_RECOVERED retries=2 totalDelay=7321ms
+
+==================================================
+[2026-03-23T18:06:04] NEW TEST START
+
+POLL_INTERVAL_MS=10000
+RETRY_DELAYS_MS=[3000,4000,5000,6000]
+
+==================================================
+[2026-03-23T18:06:23] FETCH_RETRY_1 duration=148ms
+[2026-03-23T18:06:26] FETCH_RETRY_2 duration=56ms
+[2026-03-23T18:06:30] FETCH_RECOVERED retries=2 totalDelay=7309ms

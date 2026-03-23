@@ -21,6 +21,7 @@ const MAX_LOGGED_TERMS = 10;
 const MAX_CONSECUTIVE_FETCH_FAILURES = 3;
 const sentSlots = new Set();
 let globalBookingSuccess = false;
+let postSuccessCheckDone = false; // do testów czy termin jest widoczny dalej po zarezerwowaniu
 let bookingInProgress = false;
 let statusDots = "";
 
@@ -193,7 +194,25 @@ async function runWatcher() {
   startEventLine();
 
   while (true) {
-    if (globalBookingSuccess) {
+    // if (globalBookingSuccess) {
+    //   await sleep(POLL_INTERVAL_MS); 
+    //   continue;
+    // }
+    if (globalBookingSuccess && !postSuccessCheckDone) {
+      console.log("🧪 POST-SUCCESS CHECK START");
+
+      const payload = buildPayload();
+      const responseData = await fetchSchedule(session, payload, config);
+      const termsAfter = getPracticalTerms(responseData, payload);
+
+      console.log("🧪 TERMS AFTER SUCCESS:", termsAfter.map(t => `${t.date} ${t.time}`));
+
+      await saveJson("debug-after-success.json", termsAfter);
+
+      postSuccessCheckDone = true;
+
+      console.log("🧪 POST-SUCCESS CHECK END");
+
       await sleep(POLL_INTERVAL_MS);
       continue;
     }

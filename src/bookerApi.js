@@ -30,7 +30,7 @@ async function bookSlotAPI(session, slot) {
     },
   };
 
-  console.log("BOOK PAYLOAD:", JSON.stringify(payload, null, 2));
+  // console.log("BOOK PAYLOAD:", JSON.stringify(payload, null, 2));
   const response = await fetch(url, {
     method: "POST",
     headers: {
