@@ -20,6 +20,7 @@ const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
 const MAX_CONSECUTIVE_FETCH_FAILURES = 3;
 const sentSlots = new Set();
+let globalBookingSuccess = false;
 let bookingInProgress = false;
 let statusDots = "";
 
@@ -184,7 +185,7 @@ async function runWatcher() {
     sentSlots.add(slotKey);
   }
 
-  logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 10000}s`);
+  logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
   logFetchHeader({
     pollInterval: POLL_INTERVAL_MS,
     retryDelays: [3000, 4000, 5000, 6000],
@@ -192,6 +193,10 @@ async function runWatcher() {
   startEventLine();
 
   while (true) {
+    if (globalBookingSuccess) {
+      await sleep(POLL_INTERVAL_MS);
+      continue;
+    }
     try {
       if (!session) {
         startEventLine();
@@ -258,7 +263,7 @@ async function runWatcher() {
           console.log("NEW SLOTS:", newSlots.length);
         }
 
-        if (!(newSlots.length === 0 && !FORCE_BOOKING)) {
+        if (!(newSlots.length === 0 && !FORCE_BOOKING) && !globalBookingSuccess) {
           startEventLine();
           const notifiedSlots = await notify(newSlots);
           const slotsToSave = notifiedSlots;
@@ -292,15 +297,15 @@ async function runWatcher() {
                 console.log("PAYMENT URL:", paymentUrl);
 
                 // 🔴 TU NIE UFAMY 201
-                if (result && result.id) {
+                if (result && result.id && round === 0) {
                   await sendTelegramMessage(
                     `🔥 PRÓBA REZERWACJI
 
-                    📅 ${slot.date}
-                    ⏰ ${slot.time}
+                      📅 ${slot.date}
+                      ⏰ ${slot.time}
 
-                    💳 LINK:
-                    ${paymentUrl}`
+                      💳 LINK:
+                      ${paymentUrl}`
                   );
                 }
 
@@ -316,6 +321,7 @@ async function runWatcher() {
                   await sendTelegramMessage("🔥 422 - PRAWDOPODOBNIE MAMY REZERWACJĘ");
 
                   bookingSuccess = true;
+                  globalBookingSuccess = true;
                   break;
                 }
 

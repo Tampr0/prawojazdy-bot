@@ -47,11 +47,8 @@ async function bookSlotAPI(session, slot) {
   const headers = Object.fromEntries(response.headers.entries());
   const text = await response.text();
 
-  console.log("=== BOOKING RESPONSE DEBUG ===");
-  console.log("STATUS:", status);
-  console.log("HEADERS:", headers);
-  console.log("RAW BODY:", text);
-  console.log("=== END RESPONSE DEBUG ===");
+  console.log("BOOK STATUS:", status);
+  console.log("BOOK BODY:", text);
 
   if (!response.ok) {
     throw new Error(`BOOKING_API_ERROR: ${status} ${text}`);
@@ -65,7 +62,7 @@ async function bookSlotAPI(session, slot) {
     parsed = { raw: text };
   }
 
-  console.log("PARSED BODY:", JSON.stringify(parsed, null, 2));
+  // console.log("PARSED BODY:", JSON.stringify(parsed, null, 2));
 
   return parsed;
 }
