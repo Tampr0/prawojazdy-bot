@@ -8,6 +8,7 @@ const { ensureSession, getSessionPage, resetBrowser } = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 const activityTracker = require("./activityTracker");
+const { writeDiagnosticEvent } = require("./bookingDiagnostics");
 
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
@@ -290,6 +291,20 @@ async function runWatcher() {
 
               try {
                 console.log("TRY API BOOKING:", slot.id, slot.date, slot.time);
+
+                writeDiagnosticEvent({
+                  source: "WATCHER",
+                  kind: "api-booking-attempt",
+                  slot: {
+                    id: slot.id,
+                    date: slot.date,
+                    time: slot.time,
+                    wordId: slot.wordId,
+                    amount: slot.amount ?? null,
+                    places: slot.places ?? null,
+                  },
+                  note: "Starting API booking attempt from watcher",
+                });
 
                 const result = await bookSlotAPI(session, slot);
 

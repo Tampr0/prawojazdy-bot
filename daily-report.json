@@ -201,7 +201,7 @@
       "10": 4,
       "11": 6,
       "12": 4,
-      "13": 1,
+      "13": 2,
       "14": 0,
       "15": 0,
       "16": 0,
@@ -224,7 +224,7 @@
       "09": 5
     },
     "totalAppeared": 12,
-    "totalDisappeared": 25,
-    "avgLifetimeSeconds": 129095
+    "totalDisappeared": 26,
+    "avgLifetimeSeconds": 124618
   }
 }
