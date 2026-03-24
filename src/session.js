@@ -27,9 +27,9 @@ function shouldTraceBookingUrl(url) {
     (
       url.includes("/api/word/reservations") ||
       url.includes("/api/word/reservations/") ||
-      url.includes("/payment") ||
-      url.includes("/platnosc") ||
-      url.includes("/płatność") ||
+      // url.includes("/payment") ||
+      // url.includes("/platnosc") ||
+      // url.includes("/płatność") ||
       url.includes("/api/payment") ||
       url.includes("/api/word/payment")
     )

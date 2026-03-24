@@ -14976,3 +14976,36 @@ RETRY_DELAYS_MS=[3000,4000,5000,6000,10000]
 [2026-03-24T14:22:46] FETCH_OK duration=78ms
 [2026-03-24T14:22:57] FETCH_OK duration=1102ms
 [2026-03-24T14:23:08] FETCH_OK duration=77ms
+
+==================================================
+[2026-03-24T14:36:47] NEW TEST START
+
+POLL_INTERVAL_MS=8000
+RETRY_DELAYS_MS=[3000,4000,5000,6000,10000]
+
+==================================================
+[2026-03-24T14:37:04] FETCH_RETRY_1 duration=174ms
+[2026-03-24T14:37:08] FETCH_RETRY_2 duration=53ms
+[2026-03-24T14:37:12] FETCH_RECOVERED retries=2 totalDelay=7354ms
+
+==================================================
+[2026-03-24T15:01:46] NEW TEST START
+
+POLL_INTERVAL_MS=8000
+RETRY_DELAYS_MS=[3000,4000,5000,6000,10000]
+
+==================================================
+[2026-03-24T15:02:06] FETCH_RETRY_1 duration=172ms
+[2026-03-24T15:02:09] FETCH_RETRY_2 duration=56ms
+[2026-03-24T15:02:13] FETCH_RECOVERED retries=2 totalDelay=7356ms
+
+==================================================
+[2026-03-24T15:07:14] NEW TEST START
+
+POLL_INTERVAL_MS=8000
+RETRY_DELAYS_MS=[3000,4000,5000,6000,10000]
+
+==================================================
+[2026-03-24T15:07:34] FETCH_RETRY_1 duration=172ms
+[2026-03-24T15:07:37] FETCH_RETRY_2 duration=59ms
+[2026-03-24T15:07:41] FETCH_RECOVERED retries=2 totalDelay=7340ms
