@@ -12,9 +12,9 @@ const activityTracker = require("./activityTracker");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 10000;
+const POLL_INTERVAL_MS = 8000;
 const BOOKING_LOOP_DELAY_MS = 1500; // 1.5s między próbami
-const BOOKING_MAX_ROUNDS = 20; // ile razy przejechać po liście
+const BOOKING_MAX_ROUNDS = 50; // ile razy przejechać po liście
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -26,7 +26,7 @@ let bookingInProgress = false;
 let statusDots = "";
 
 function getNextInterval() {
-  return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000); // +0–2s
+  return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000);
 }
 
 function sleep(ms) {
@@ -189,33 +189,17 @@ async function runWatcher() {
   logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
   logFetchHeader({
     pollInterval: POLL_INTERVAL_MS,
-    retryDelays: [3000, 4000, 5000, 6000],
+    retryDelays: [3000, 4000, 5000, 6000, 10000],
   });
   startEventLine();
 
   while (true) {
-    // if (globalBookingSuccess) {
-    //   await sleep(POLL_INTERVAL_MS); 
-    //   continue;
-    // }
-    if (globalBookingSuccess && !postSuccessCheckDone) {
-      console.log("🧪 POST-SUCCESS CHECK START");
-
-      const payload = buildPayload();
-      const responseData = await fetchSchedule(session, payload, config);
-      const termsAfter = getPracticalTerms(responseData, payload);
-
-      console.log("🧪 TERMS AFTER SUCCESS:", termsAfter.map(t => `${t.date} ${t.time}`));
-
-      await saveJson("debug-after-success.json", termsAfter);
-
-      postSuccessCheckDone = true;
-
-      console.log("🧪 POST-SUCCESS CHECK END");
-
+    if (globalBookingSuccess) {
+      console.log("🛑 BOOKING SUCCESS - WATCHER PAUSED");
       await sleep(POLL_INTERVAL_MS);
       continue;
     }
+
     try {
       if (!session) {
         startEventLine();
@@ -314,6 +298,15 @@ async function runWatcher() {
                 const paymentUrl = `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${result.id}/platnosc`;
 
                 console.log("PAYMENT URL:", paymentUrl);
+                let page = getSessionPage();
+
+                if (page && !page.isClosed()) {
+                  console.log("🌐 OPENING PAYMENT PAGE...");
+                  await sleep(500);
+                  await page.goto("https://info-car.pl/new/");
+                  await sleep(500);
+                  await page.goto(paymentUrl);
+                }
 
                 // 🔴 TU NIE UFAMY 201
                 if (result && result.id && round === 0) {

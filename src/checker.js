@@ -128,8 +128,8 @@ async function fetchSchedule(session, payload, config) {
 
 const { logFetch } = require("./logger");
 
-async function fetchWithRetry(fn, retries = 4) {
-  const delaysMs = [3000, 4000, 5000, 6000];
+async function fetchWithRetry(fn, retries = 5) {
+  const delaysMs = [3000, 4000, 5000, 6000, 10000];
 
   const startTime = Date.now();
   let attempt = 0;

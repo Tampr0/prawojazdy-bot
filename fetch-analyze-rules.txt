@@ -1,91 +1,157 @@
-SPEC: ANALIZA FETCH LOG
-1. DEFINICJE
-1.1 Success event
-Success event = linia zawierająca:
+SPECYFIKACJA – ANALIZA FETCH LOGÓW
+1. DEFINICJE ZDARZEŃ
+Sukces (SUCCESS)
+
+Zdarzenie uznawane za udane:
+
 FETCH_OK
 FETCH_RECOVERED
-Oba traktowane identycznie.
+Retry (RETRY)
 
-1.2 Ignorowane eventy
-Ignorujemy całkowicie:
-FETCH_RETRY_X
-FETCH_FAILED (nie tworzy success event)
+Zdarzenia pośrednie:
 
-2. STRUMIEŃ DANYCH
-Z loga budujemy sekwencję:
-S = [t1, t2, t3, ... tn]
-gdzie:
-ti = timestamp każdego success eventu (OK lub RECOVERED)
+FETCH_RETRY_1
+FETCH_RETRY_2
+FETCH_RETRY_3
+FETCH_RETRY_4
+...
+Fail (FAILED)
 
-3. METRYKA GŁÓWNA
-3.1 Odstęp między fetchami
-Dla każdego i:
-delta_i = t_i - t_(i-1)
+Zdarzenie nieudane:
 
-3.2 Średnia
-avg_delta = (Σ delta_i) / (n-1)
+FETCH_FAILED
+2. PODSTAWOWA JEDNOSTKA ANALIZY
+PRÓBA (ATTEMPT)
 
-3.3 Mediana
-Sortujemy:
-delta_sorted = sort(delta_i)
-Mediana:
-jeśli n parzyste → średnia 2 środkowych
-jeśli nieparzyste → środkowy element
+Jedna próba = pełny cykl:
 
-4. METRYKI WAF
-Liczymy tylko dla eventów FETCH_RECOVERED
+start: pierwszy FETCH_RETRY_* lub bezpośrednio FETCH_OK
+koniec:
+FETCH_OK → sukces bez retry
+FETCH_RECOVERED → sukces po retry
+FETCH_FAILED → porażka
+3. LICZBA WSZYSTKICH PRÓB
+Definicja:
 
-4.1 Retry count
-Dla każdego FETCH_RECOVERED:
-retry_count = liczba FETCH_RETRY_X bezpośrednio przed nim
-Średnia:
-avg_retry = (Σ retry_count) / liczba_recovered
+Każdy cykl zakończony jednym z:
 
-4.2 Delay WAF
-Z linii:
-FETCH_RECOVERED ... totalDelay=XXXX
-zbieramy:
-delay_i = totalDelay
+FETCH_OK
+FETCH_RECOVERED
+FETCH_FAILED
+Wzór:
+TOTAL_ATTEMPTS = count(FETCH_OK + FETCH_RECOVERED + FETCH_FAILED)
+4. LICZBA UDANYCH PRÓB
+Definicja:
+SUCCESS_COUNT = count(FETCH_OK + FETCH_RECOVERED)
+5. PROCENT UDANYCH PRÓB
+Wzór:
+SUCCESS_RATE = (SUCCESS_COUNT / TOTAL_ATTEMPTS) * 100%
+6. ROZKŁAD PO LICZBIE RETRY
 
-Średnia:
-avg_delay = (Σ delay_i) / liczba_recovered
-Mediana:
- analogicznie jak w pkt 3.3
+Dotyczy tylko:
 
-5. ZASADY OBRÓBKI
-5.1 Ignorujemy duration
-Nie używamy:
-duration=...
+FETCH_RECOVERED retries = X
+Metryki:
+SUCCESS_AFTER_1_RETRY = count(FETCH_RECOVERED retries=1)
+SUCCESS_AFTER_2_RETRY = count(FETCH_RECOVERED retries=2)
+SUCCESS_AFTER_3_RETRY = count(FETCH_RECOVERED retries=3)
+SUCCESS_AFTER_4_RETRY = count(FETCH_RECOVERED retries=4)
+...
+7. SUKCES BEZ RETRY
+Definicja:
+SUCCESS_NO_RETRY = count(FETCH_OK)
+8. ŚREDNI CZAS MIĘDZY UDANYMI FETCHAMI (KLUCZOWA METRYKA)
+Zasada:
 
-5.2 Retry nie tworzy punktu w czasie
-Sekwencja:
-OK → RETRY → RETRY → RECOVERED
-oznacza:
-jeden punkt końcowy = RECOVERED
+Liczymy tylko między kolejnymi sukcesami:
 
-5.3 FAILED
-nie jest success event
-nie generuje delta
-traktowany jako brak danych
+SUCCESS = FETCH_OK lub FETCH_RECOVERED
+Algorytm:
+Wyciągnij wszystkie sukcesy w kolejności czasowej:
+S1, S2, S3, ..., Sn
+Dla każdego sąsiedniego:
+INTERVAL_i = timestamp(S_i+1) - timestamp(S_i)
+Wynik:
+AVG_SUCCESS_INTERVAL = suma(INTERVAL_i) / (n - 1)
+WAŻNE ZASADY:
+1. Retry są ignorowane jako punkty
+FETCH_RETRY_* nie tworzą interwałów
+2. FETCH_RECOVERED = sukces
+traktowane identycznie jak FETCH_OK
+3. Start loga od retry
 
-5.4 Jednostki
-Wszystkie obliczenia:
-timestamp → sekundy
-delay → sekundy (jeśli w ms → dzielić przez 1000)
+Jeśli log zaczyna się od:
 
-6. OUTPUT (TABELA)
-Tabela zawiera wyłącznie:
-INTERWAŁ_ODPYTYWANIA_MS
-OPÓŹNIENIA_RETRY_MS
-ŚREDNI_CZAS_MIĘDZY_FETCHAMI_S
-MEDIANA_CZASU_MIĘDZY_FETCHAMI_S
-ŚREDNIA_LICZBA_RETRY
-ŚREDNIE_OPÓŹNIENIE_WAF_S
-MEDIANA_OPÓŹNIENIA_WAF_S
+FETCH_RETRY_*
 
+→ ignorujemy aż do pierwszego:
 
-7. CEL ANALIZY
-Optymalizacja:
-min(avg_delta)
-przy stabilnym avg_retry i avg_delay
+FETCH_RECOVERED
 
+→ to jest pierwszy punkt startowy
+
+4. FETCH_FAILED wlicza się w czas
+
+Jeśli między dwoma sukcesami występuje:
+
+FETCH_FAILED
+
+→ czas normalnie leci
+
+→ NIE przerywa interwału
+
+9. LICZBA NIEUDANYCH PRÓB
+Definicja:
+FAILED_COUNT = count(FETCH_FAILED)
+10. CZAS TRWANIA NIEUDANYCH PRÓB
+
+Z loga:
+
+FETCH_FAILED totalTime=XXXXms
+Metryki:
+FAILED_TOTAL_TIME = suma(totalTime)
+FAILED_AVG_TIME = średnia(totalTime)
+11. OPCJONALNE (ALE PRAKTYCZNE)
+Średnia liczba retry na sukces
+AVG_RETRY_PER_SUCCESS =
+    suma(retries z FETCH_RECOVERED) / SUCCESS_COUNT
+12. FINALNY ZESTAW METRYK (DO OUTPUTU)
+
+Minimalny zestaw:
+
+TOTAL_ATTEMPTS
+SUCCESS_COUNT
+SUCCESS_RATE (%)
+
+SUCCESS_NO_RETRY
+SUCCESS_AFTER_1_RETRY
+SUCCESS_AFTER_2_RETRY
+SUCCESS_AFTER_3_RETRY
+SUCCESS_AFTER_4_RETRY
+
+FAILED_COUNT
+
+AVG_SUCCESS_INTERVAL (s)
+
+Opcjonalnie:
+
+FAILED_AVG_TIME (ms)
+AVG_RETRY_PER_SUCCESS
+13. KLUCZOWA INTENCJA SYSTEMU
+
+Ten system mierzy:
+
+👉 realną przepustowość bota w warunkach WAF
+
+a nie:
+
+szybkość pojedynczego requestu
+duration
+latency API
+14. NAJWAŻNIEJSZA METRYKA
+AVG_SUCCESS_INTERVAL
+
+Interpretacja:
+
+niższy = bardziej agresywny i skuteczny bot
+wyższy = więcej blokad / retry / WAF

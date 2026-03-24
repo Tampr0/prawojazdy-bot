@@ -1,0 +1,28 @@
+POLL_INTERVAL_MS=9000 RETRY_DELAYS_MS=[3000,4000,5000,6000]
+
+FETCH_OK: ~70
+FETCH_RETRY: ~170
+FETCH_RECOVERED: ~90
+FETCH_FAILED: 1
+
+👉 ŁĄCZNIE ≈ 331 prób
+
+FETCH_OK = ~70
+
+👉 % bez WAF ≈ 21%
+
+ROZKŁAD RETRY (FETCH_RECOVERED)
+retry = 1 → ~10
+retry = 2 → ~70 (dominujące)
+retry = 3 → ~7
+retry = 4 → ~3
+
+👉 ~78% to retry=2
+
+FETCH_FAILED - 1
+
+👉 ŚREDNI_CZAS_SUKCESU ≈ 12.5–13.5 s
+
+(realnie ~13 s)
+
+wnioski : 9s FETCH daje lepsze ogólne wyniki niż 10s. Zwiększyć czas pierwszego retry.
