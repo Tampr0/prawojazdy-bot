@@ -2,6 +2,11 @@ const fs = require("fs/promises");
 const path = require("path");
 const { chromium } = require("playwright");
 const { loadConfig } = require("./config");
+const {
+  writeDiagnosticEvent,
+  redactHeaders,
+  redactBody,
+} = require("./bookingDiagnostics");
 
 const APP_ENTRY_URL = "https://info-car.pl/new";
 const SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
@@ -10,13 +15,156 @@ let ensureSessionPromise = null;
 let sharedContext = null;
 let sharedPage = null;
 
+const instrumentedPages = new WeakSet();
+
+function shouldTraceBookingUrl(url) {
+  if (!url || typeof url !== "string") {
+    return false;
+  }
+
+  return (
+    url.includes("info-car.pl") &&
+    (
+      url.includes("/api/word/reservations") ||
+      url.includes("/api/word/reservations/") ||
+      url.includes("/payment") ||
+      url.includes("/platnosc") ||
+      url.includes("/płatność") ||
+      url.includes("/api/payment") ||
+      url.includes("/api/word/payment")
+    )
+  );
+}
+
+function summarizeSetCookie(headers = {}) {
+  const rawValue = headers["set-cookie"] || headers["Set-Cookie"];
+
+  if (!rawValue || typeof rawValue !== "string") {
+    return [];
+  }
+
+  return rawValue
+    .split(/,(?=[^;]+?=)/)
+    .map((cookiePart) => cookiePart.trim())
+    .map((cookiePart) => cookiePart.split(";")[0])
+    .map((cookiePart) => cookiePart.split("=")[0])
+    .filter(Boolean);
+}
+
+function attachBookingDiagnostics(page) {
+  if (!page || instrumentedPages.has(page)) {
+    return;
+  }
+
+  instrumentedPages.add(page);
+
+  page.on("request", async (request) => {
+    const url = request.url();
+
+    if (!shouldTraceBookingUrl(url)) {
+      return;
+    }
+
+    let requestBody = null;
+
+    try {
+      const postData = request.postData();
+      requestBody = postData ? redactBody(postData) : null;
+    } catch {
+      requestBody = null;
+    }
+
+    writeDiagnosticEvent({
+      source: "UI",
+      kind: "request",
+      method: request.method(),
+      url,
+      resourceType: request.resourceType(),
+      requestHeaders: redactHeaders(request.headers()),
+      requestBody,
+      pageUrl: page.url(),
+      note: "Playwright captured outgoing UI request",
+    });
+  });
+
+  page.on("response", async (response) => {
+    const url = response.url();
+
+    if (!shouldTraceBookingUrl(url)) {
+      return;
+    }
+
+    const request = response.request();
+    const headers = response.headers();
+
+    let responseBody = null;
+
+    try {
+      responseBody = redactBody(await response.text());
+    } catch (error) {
+      responseBody = `[response body unavailable: ${error.message}]`;
+    }
+
+    writeDiagnosticEvent({
+      source: "UI",
+      kind: "response",
+      method: request.method(),
+      url,
+      status: response.status(),
+      ok: response.ok(),
+      responseHeaders: redactHeaders(headers),
+      setCookieNames: summarizeSetCookie(headers),
+      responseBody,
+      pageUrl: page.url(),
+      note: "Playwright captured incoming UI response",
+    });
+  });
+
+  page.on("requestfinished", async (request) => {
+    const url = request.url();
+
+    if (!shouldTraceBookingUrl(url)) {
+      return;
+    }
+
+    writeDiagnosticEvent({
+      source: "UI",
+      kind: "request-finished",
+      method: request.method(),
+      url,
+      pageUrl: page.url(),
+      note: "Playwright request finished",
+    });
+  });
+
+  page.on("requestfailed", async (request) => {
+    const url = request.url();
+
+    if (!shouldTraceBookingUrl(url)) {
+      return;
+    }
+
+    const failure = request.failure();
+
+    writeDiagnosticEvent({
+      source: "UI",
+      kind: "request-failed",
+      method: request.method(),
+      url,
+      failureText: failure ? failure.errorText : "UNKNOWN_REQUEST_FAILURE",
+      pageUrl: page.url(),
+      note: "Playwright request failed",
+    });
+  });
+}
+
 async function resetBrowser() {
   console.log("RESETTING BROWSER CONTEXT");
 
   if (sharedContext) {
     try {
       await sharedContext.close();
-    } catch {}
+    } catch { }
   }
 
   sharedContext = null;
@@ -52,6 +200,7 @@ async function ensureSharedPage() {
 
   sharedContext = await launchBrowserContext();
   sharedPage = sharedContext.pages()[0] || (await sharedContext.newPage());
+  attachBookingDiagnostics(sharedPage);
 
   return sharedPage;
 }
@@ -229,7 +378,7 @@ async function triggerExamScheduleRequest(page) {
   await page.getByPlaceholder(/Wybierz o/i).click();
   await page.getByRole("button", { name: /WORD Wroc/i }).click();
   await acceptCookies(page);
-  
+
   await page.mouse.wheel(0, 400);
   const categoryInput = page.getByPlaceholder("Wybierz kategorię");
   await categoryInput.scrollIntoViewIfNeeded();
@@ -238,7 +387,7 @@ async function triggerExamScheduleRequest(page) {
   await page.keyboard.type("B");
   await page.waitForTimeout(500);
   await page.keyboard.press("Enter");
-  
+
   await page.getByRole("button", { name: /Dalej/i }).click();
   await page.locator('input[type="radio"]').nth(1).click();
 }
@@ -338,9 +487,9 @@ async function loginAndCaptureSession(config = loadConfig()) {
       ],
       login
     );
-    
 
-    
+
+
     await page.waitForSelector('input[type="password"]');
 
     try {
@@ -348,7 +497,7 @@ async function loginAndCaptureSession(config = loadConfig()) {
     } catch (error) {
       await page.locator('input[type="password"]').fill(password);
     }
-    
+
 
     await Promise.all([
       page.waitForLoadState("domcontentloaded").catch(() => { }),
@@ -365,7 +514,7 @@ async function loginAndCaptureSession(config = loadConfig()) {
     }
 
     for (let i = 0; i < 3; i++) {
-      
+
       if (page.url().includes("/new/konto")) {
         console.log("FORCE CLICK FLOW");
         await acceptCookies(page);
