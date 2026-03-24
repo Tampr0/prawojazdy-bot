@@ -34,6 +34,11 @@ function loadConfig() {
     slotMinDays: Number(process.env.SLOT_MIN_DAYS || 0),
     slotMaxDays: Number(process.env.SLOT_MAX_DAYS || 999),
     debug: process.env.DEBUG === "true",
+    bookingDiagnostics: process.env.BOOKING_DIAGNOSTICS === "true",
+    bookingDiagnosticsFilePath: path.resolve(
+      process.cwd(),
+      process.env.BOOKING_DIAGNOSTICS_FILE || "booking-diagnostic.jsonl"
+    ),
   };
 }
 
