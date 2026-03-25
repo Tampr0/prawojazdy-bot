@@ -602,3 +602,4 @@
 {"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-18T11:20:00_11:20:00_3_PRACTICAL","date":"2026-03-25","time":"10:00:37","ts":"2026-03-25T09:00:37.944Z","lifetimeSec":314732}
 {"type":"APPEARED","source":"FULL","slotKey":"2026-05-14T15:00:00_15:00:00_3_PRACTICAL","date":"2026-03-25","time":"10:04:48","ts":"2026-03-25T09:04:48.730Z"}
 {"type":"APPEARED","source":"FULL","slotKey":"2026-05-18T11:20:00_11:20:00_3_PRACTICAL","date":"2026-03-25","time":"10:04:48","ts":"2026-03-25T09:04:48.733Z"}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-14T15:00:00_15:00:00_3_PRACTICAL","date":"2026-03-25","time":"10:10:48","ts":"2026-03-25T09:10:48.189Z","lifetimeSec":359}
