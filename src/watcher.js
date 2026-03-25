@@ -1,5 +1,5 @@
 const fs = require("fs/promises");
-const { loadConfig } = require("./config");
+const { getFetchTimingConfig, loadConfig } = require("./config");
 const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
 const { bookSlotAPI, pollExpireTimeDiagnostic } = require("./bookerApi");
@@ -9,11 +9,12 @@ const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 const activityTracker = require("./activityTracker");
 const { writeDiagnosticEvent } = require("./bookingDiagnostics");
+const { createFetchStatsSession } = require("./fetchStats");
 
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
+const fetchTimingConfig = getFetchTimingConfig();
 
-const POLL_INTERVAL_MS = 6000;
 const BOOKING_LOOP_DELAY_MS = 400; // delay between slot booking attempts inside one burst round
 const BOOKING_BURST_INTERVAL_MS = 500; // delay between booking rounds in background worker
 const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
@@ -39,7 +40,10 @@ let slotCombatState = new Map();
 let combatStats = createEmptyCombatStats();
 
 function getNextInterval() {
-  return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000);
+  return (
+    fetchTimingConfig.pollIntervalMs +
+    Math.floor(Math.random() * (fetchTimingConfig.pollJitterMaxMs + 1))
+  );
 }
 
 function sleep(ms) {
@@ -804,10 +808,16 @@ async function runWatcher() {
     sentSlots.add(slotKey);
   }
 
-  logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
+  createFetchStatsSession({
+    pollIntervalMs: fetchTimingConfig.pollIntervalMs,
+    pollJitterMaxMs: fetchTimingConfig.pollJitterMaxMs,
+    fetchRetryDelaysMs: fetchTimingConfig.fetchRetryDelaysMs,
+  });
+
+  logInfo(`Watcher uruchomiony. Interwal: ${fetchTimingConfig.pollIntervalMs / 1000}s`);
   logFetchHeader({
-    pollInterval: POLL_INTERVAL_MS,
-    retryDelays: [5000, 4000, 4000, 8000, 10000],
+    pollInterval: fetchTimingConfig.pollIntervalMs,
+    retryDelays: fetchTimingConfig.fetchRetryDelaysMs,
   });
   startEventLine();
   void runBookingBurstWorker(() => session);
@@ -816,7 +826,7 @@ async function runWatcher() {
   while (true) {
     if (globalBookingSuccess) {
       console.log("🛑 BOOKING SUCCESS - WATCHER PAUSED");
-      await sleep(POLL_INTERVAL_MS);
+      await sleep(fetchTimingConfig.pollIntervalMs);
       continue;
     }
 

@@ -13,7 +13,7 @@ Nie zależy mi na optymalizacji ustawień pod kątem uśpienia czujności WAF, b
 
 Inne wartości które uważam za pomocne to:
 
-- średni czas sukcesu
+- średni czas sukcesu (poniżej jest wytłumaczone jak liczymy czas sukcesu)
 - liczba wszystkich prób (FETCH_OK, FETCH_RETRY, FETCH_RECOVERED i FETCH_FAILED)
 - liczba prób bez uruchamiania WAF - (tylko FETCH_OK)
 - % prób bez WAF
@@ -57,7 +57,6 @@ osługa FETCH_FAILED:
 [2026-03-24T07:05:22] FETCH_RECOVERED retries=2 totalDelay=7247ms
 wynik - 60s
 
-wnioski do wyciągnięcia:
-które retry dominuje, jeśli 2 to pierwsze można by trochę wydłużyć aby łapało pierwsze częściej, oszczędzamy czas. 
+
 
 

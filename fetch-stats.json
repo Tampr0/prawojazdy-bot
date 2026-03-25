@@ -1,0 +1,43 @@
+{
+  "configs": {
+    "{\"pollIntervalMs\":6000,\"jitterMinMs\":0,\"jitterMaxMs\":3000,\"retryDelaysMs\":[5000,4000,4000,8000,10000]}": {
+      "config": {
+        "pollIntervalMs": 6000,
+        "jitterMinMs": 0,
+        "jitterMaxMs": 3000,
+        "retryDelaysMs": [
+          5000,
+          4000,
+          4000,
+          8000,
+          10000
+        ]
+      },
+      "raw": {
+        "allAttempts": 87,
+        "successAttempts": 36,
+        "wafAttempts": 51,
+        "fetchOkCount": 4,
+        "fetchRecoveredCount": 32,
+        "retry1Count": 33,
+        "retry2Count": 10,
+        "retry3Count": 8,
+        "retry4Count": 0,
+        "fetchFailedCount": 0,
+        "successIntervalSumMs": 474456,
+        "successIntervalCount": 34
+      },
+      "derived": {
+        "noWafPercent": 41.37931034482759,
+        "wafPercent": 58.620689655172406,
+        "retry1PercentOfWaf": 64.70588235294117,
+        "retry2PercentOfWaf": 19.607843137254903,
+        "retry3PercentOfWaf": 15.686274509803921,
+        "retry4PercentOfWaf": 0,
+        "failedPercentOfWaf": 0,
+        "avgSuccessIntervalMs": 13954.588235294117,
+        "avgSuccessIntervalSec": 13.954588235294118
+      }
+    }
+  }
+}

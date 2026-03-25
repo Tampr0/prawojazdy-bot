@@ -1,6 +1,8 @@
 const { chromium, firefox, webkit } = require("playwright");
 const { logInfo } = require("./logger");
 const { saveSession } = require("./session");
+const { getFetchTimingConfig, loadConfig } = require("./config");
+const { recordFetchEvent } = require("./fetchStats");
 
 const browsers = {
   chromium,
@@ -128,8 +130,8 @@ async function fetchSchedule(session, payload, config) {
 
 const { logFetch } = require("./logger");
 
-async function fetchWithRetry(fn, retries = 5) {
-  const delaysMs = [5000, 4000, 4000, 8000, 10000];
+async function fetchWithRetry(fn, retries = getFetchTimingConfig().fetchRetryDelaysMs.length) {
+  const delaysMs = getFetchTimingConfig().fetchRetryDelaysMs;
 
   const startTime = Date.now();
   let attempt = 0;
@@ -144,9 +146,11 @@ async function fetchWithRetry(fn, retries = 5) {
 
       if (attempt === 0) {
         logFetch(`FETCH_OK duration=${duration}ms`);
+        recordFetchEvent("FETCH_OK", Date.now());
       } else {
         const totalDelay = Date.now() - startTime;
         logFetch(`FETCH_RECOVERED retries=${attempt} totalDelay=${totalDelay}ms`);
+        recordFetchEvent("FETCH_RECOVERED", Date.now());
       }
 
       return result;
@@ -154,13 +158,16 @@ async function fetchWithRetry(fn, retries = 5) {
       attempt++;
 
       const duration = Date.now() - attemptStart;
+      const hasRetryDelayAvailable = i < retries - 1;
 
-      if (i === retries) {
+      if (!hasRetryDelayAvailable) {
         logFetch(`FETCH_FAILED retries=${attempt} totalTime=${Date.now() - startTime}ms`);
+        recordFetchEvent("FETCH_FAILED", Date.now());
         throw err;
       }
 
       logFetch(`FETCH_RETRY_${attempt} duration=${duration}ms`);
+      recordFetchEvent(`FETCH_RETRY_${attempt}`, Date.now());
 
       const delayMs = delaysMs[Math.min(i, delaysMs.length - 1)];
       await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -173,8 +180,6 @@ module.exports = {
   fetchSchedule,
   fetchWithRetry,
 };
-
-const { loadConfig } = require("./config");
 
 if (require.main === module) {
   (async () => {

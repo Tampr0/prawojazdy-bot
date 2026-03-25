@@ -3,9 +3,20 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+function getFetchTimingConfig() {
+  return {
+    pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 6000),
+    pollJitterMaxMs: Number(process.env.POLL_JITTER_MAX_MS || 3000),
+    fetchRetryDelaysMs: (process.env.FETCH_RETRY_DELAYS_MS || "5000,4000,4000,8000,10000")
+      .split(",")
+      .map((value) => Number(value.trim()))
+      .filter((value) => Number.isFinite(value) && value >= 0),
+  };
+}
+
 function loadConfig() {
   const targetUrl = process.env.TARGET_URL;
-
+  const fetchTiming = getFetchTimingConfig();
 
   if (!targetUrl) {
     throw new Error("Missing required environment variable: TARGET_URL");
@@ -33,6 +44,9 @@ function loadConfig() {
     payloadJson: process.env.EXAM_SCHEDULE_PAYLOAD_JSON || "",
     slotMinDays: Number(process.env.SLOT_MIN_DAYS || 0),
     slotMaxDays: Number(process.env.SLOT_MAX_DAYS || 999),
+    pollIntervalMs: fetchTiming.pollIntervalMs,
+    pollJitterMaxMs: fetchTiming.pollJitterMaxMs,
+    fetchRetryDelaysMs: fetchTiming.fetchRetryDelaysMs,
     debug: process.env.DEBUG === "true",
     bookingDiagnostics: process.env.BOOKING_DIAGNOSTICS === "true",
     bookingDiagnosticsFilePath: path.resolve(
@@ -43,5 +57,6 @@ function loadConfig() {
 }
 
 module.exports = {
+  getFetchTimingConfig,
   loadConfig,
 };
