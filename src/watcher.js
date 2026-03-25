@@ -16,6 +16,7 @@ const DEBUG = false;
 const POLL_INTERVAL_MS = 8000;
 const BOOKING_LOOP_DELAY_MS = 1500; // keep current timing in step 1
 const BOOKING_BURST_INTERVAL_MS = 1000; // delay between booking rounds in background worker
+const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -205,6 +206,14 @@ function getFightSlotsSnapshot() {
   return fightSlotsSnapshot.map(cloneFightSlot);
 }
 
+function isFightModeStale() {
+  if (!fightModeActive || fightModeLastSeenAt <= 0) {
+    return false;
+  }
+
+  return Date.now() - fightModeLastSeenAt > FIGHT_MODE_TIMEOUT_MS;
+}
+
 async function runBookingBurstWorker(getSession) {
   if (burstWorkerStarted) {
     return;
@@ -221,6 +230,12 @@ async function runBookingBurstWorker(getSession) {
       }
 
       const session = getSession();
+
+      if (isFightModeStale()) {
+        clearFightState();
+        await sleep(250);
+        continue;
+      }
 
       if (!session || !fightModeActive || bookingInProgress) {
         await sleep(250);
@@ -399,14 +414,14 @@ async function runWatcher() {
       const status = `STATUS${getDots()} | ${statusTime} | slots: ${filteredByRange.length} | session: ${session ? "OK" : "NO"}`;
       logStatus(status);
 
-      if (practicalTerms.length !== 0) {
-        if (filteredByRange.length === 0) {
-          clearFightState();
-          await saveJson(config.debugSlotsFilePath, practicalTerms);
-          await sleep(getNextInterval());
-          continue;
+      if (filteredByRange.length === 0) {
+        if (fightModeActive) {
+          startEventLine();
+          console.log("🧹 FIGHT MODE CLEARED | no slots in current fetch");
         }
 
+        clearFightState();
+      } else {
         // const newSlots = filteredByRange.filter((slot) => {
         //   const key = buildSlotKey(slot);
         //   return !sentSlots.has(key);

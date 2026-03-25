@@ -252,7 +252,7 @@
       "06": 1,
       "07": 3,
       "08": 0,
-      "09": 0
+      "09": 1
     },
     "disappearByHour": {
       "10": 0,
@@ -278,10 +278,10 @@
       "06": 1,
       "07": 2,
       "08": 3,
-      "09": 1
+      "09": 4
     },
-    "totalAppeared": 4,
-    "totalDisappeared": 8,
-    "avgLifetimeSeconds": 151943
+    "totalAppeared": 5,
+    "totalDisappeared": 11,
+    "avgLifetimeSeconds": 195771
   }
 }
