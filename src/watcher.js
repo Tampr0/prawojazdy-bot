@@ -13,7 +13,7 @@ const { writeDiagnosticEvent } = require("./bookingDiagnostics");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 7000;
+const POLL_INTERVAL_MS = 6000;
 const BOOKING_LOOP_DELAY_MS = 400; // delay between slot booking attempts inside one burst round
 const BOOKING_BURST_INTERVAL_MS = 1000; // delay between booking rounds in background worker
 const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
@@ -38,6 +38,8 @@ let lastReservationCandidate = null;
 let validationWorkerStarted = false;
 let pendingReservationCandidates = [];
 let activeReservationValidation = null;
+
+let combatStats = createEmptyCombatStats();
 
 function getNextInterval() {
   return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000);
@@ -184,6 +186,53 @@ function startEventLine() {
   console.log("");
 }
 
+function createEmptyCombatStats() {
+  return {
+    fightStartedAt: 0,
+    fightArmedCount: 0,
+    fightClearedCount: 0,
+    burstRounds: 0,
+    reservationAttempts: 0,
+    reservationCandidates201: 0,
+    reservation422: 0,
+    validationStarts: 0,
+    validationSuccesses: 0,
+    validationNullFinishes: 0,
+    bookingWorkerErrors: 0,
+    validationWorkerErrors: 0,
+  };
+}
+
+function resetCombatStatsForNewFight() {
+  combatStats = {
+    ...createEmptyCombatStats(),
+    fightStartedAt: Date.now(),
+    fightArmedCount: combatStats.fightArmedCount + 1,
+  };
+}
+
+function getCombatDurationMs() {
+  if (!combatStats.fightStartedAt) {
+    return 0;
+  }
+
+  return Date.now() - combatStats.fightStartedAt;
+}
+
+function logCombatSummary(reason) {
+  const durationMs = getCombatDurationMs();
+
+  console.log(
+    `[COMBAT SUMMARY] reason=${reason} durationMs=${durationMs} ` +
+      `armed=${combatStats.fightArmedCount} cleared=${combatStats.fightClearedCount} ` +
+      `burstRounds=${combatStats.burstRounds} reservationAttempts=${combatStats.reservationAttempts} ` +
+      `candidates201=${combatStats.reservationCandidates201} reservation422=${combatStats.reservation422} ` +
+      `validationStarts=${combatStats.validationStarts} validationSuccesses=${combatStats.validationSuccesses} ` +
+      `validationNullFinishes=${combatStats.validationNullFinishes} ` +
+      `bookingWorkerErrors=${combatStats.bookingWorkerErrors} validationWorkerErrors=${combatStats.validationWorkerErrors}`
+  );
+}
+
 function cloneFightSlot(slot) {
   return {
     id: slot.id,
@@ -305,6 +354,9 @@ async function runBookingBurstWorker(getSession) {
       const session = getSession();
 
       if (isFightModeStale()) {
+        combatStats.fightClearedCount += 1;
+        console.log("🧹 FIGHT MODE CLEARED | stale timeout");
+        logCombatSummary("stale-timeout");
         clearFightState();
         await sleep(250);
         continue;
@@ -325,6 +377,7 @@ async function runBookingBurstWorker(getSession) {
       bookingInProgress = true;
       startEventLine();
       console.log(`🔥 BURST ROUND START | slots: ${slots.length} | slotDelayMs: ${BOOKING_LOOP_DELAY_MS} | burstIntervalMs: ${BOOKING_BURST_INTERVAL_MS}`);
+      combatStats.burstRounds += 1;
       const isFirstBurstRound = fightModeLastSeenAt > 0 && Date.now() - fightModeLastSeenAt < BOOKING_BURST_INTERVAL_MS + 250;
 
       for (const slot of slots) {
@@ -334,6 +387,7 @@ async function runBookingBurstWorker(getSession) {
 
         try {
           console.log("TRY API BOOKING:", slot.id, slot.date, slot.time);
+          combatStats.reservationAttempts += 1;
 
           writeDiagnosticEvent({
             source: "WATCHER",
@@ -353,6 +407,7 @@ async function runBookingBurstWorker(getSession) {
 
           console.log("BOOK RESPONSE:", result);
 
+          combatStats.reservationCandidates201 += 1;
           const candidate = storeReservationCandidate(slot, {
             ...result,
             __diagnostics: {
@@ -374,6 +429,15 @@ async function runBookingBurstWorker(getSession) {
             pendingQueueLength: pendingReservationCandidates.length,
             validationQueueMax: VALIDATION_QUEUE_MAX,
             candidateMaxAgeMs: VALIDATION_CANDIDATE_MAX_AGE_MS,
+            combatStatsSnapshot: {
+              burstRounds: combatStats.burstRounds,
+              reservationAttempts: combatStats.reservationAttempts,
+              reservationCandidates201: combatStats.reservationCandidates201,
+              reservation422: combatStats.reservation422,
+              validationStarts: combatStats.validationStarts,
+              validationSuccesses: combatStats.validationSuccesses,
+              validationNullFinishes: combatStats.validationNullFinishes,
+            },
             note: "Reservation POST returned candidate result; queued with newest-first slot-aware validation policy",
           });
         } catch (apiError) {
@@ -383,6 +447,7 @@ async function runBookingBurstWorker(getSession) {
 
           if (msg.includes("422")) {
             console.log("ℹ️ 422 another-started - keeping burst alive, no success assumption");
+            combatStats.reservation422 += 1;
 
             writeDiagnosticEvent({
               source: "WATCHER",
@@ -410,6 +475,7 @@ async function runBookingBurstWorker(getSession) {
       console.log("🔥 BURST ROUND END");
     } catch (workerError) {
       console.log("BURST WORKER ERROR:", String(workerError?.message || workerError));
+      combatStats.bookingWorkerErrors += 1;
     } finally {
       bookingInProgress = false;
     }
@@ -454,6 +520,7 @@ async function runReservationValidationWorker() {
       }
 
       activeReservationValidation = candidate;
+      combatStats.validationStarts += 1;
 
       const diagnostics = candidate.diagnostics || {};
       const reservationId = candidate.reservationId;
@@ -485,6 +552,7 @@ async function runReservationValidationWorker() {
       });
 
       if (validationResult && validationResult.firstNonNullExpireTime !== null) {
+        combatStats.validationSuccesses += 1;
         globalBookingSuccess = true;
         clearFightState();
         pendingReservationCandidates = [];
@@ -493,6 +561,7 @@ async function runReservationValidationWorker() {
 
         console.log("✅ VALIDATED RESERVATION:", reservationId, validationResult.firstNonNullExpireTime);
         console.log("✅ VALIDATED PAYMENT URL:", paymentUrl);
+        logCombatSummary("validated-success");
 
         await sendTelegramMessage(
           `🔥 POTWIERDZONA REZERWACJA
@@ -513,9 +582,12 @@ ${paymentUrl}`
           await sleep(500);
           await page.goto(paymentUrl);
         }
+      } else {
+        combatStats.validationNullFinishes += 1;
       }
     } catch (validationError) {
       console.log("VALIDATION WORKER ERROR:", String(validationError?.message || validationError));
+      combatStats.validationWorkerErrors += 1;
     } finally {
       activeReservationValidation = null;
     }
@@ -543,7 +615,7 @@ async function runWatcher() {
   logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
   logFetchHeader({
     pollInterval: POLL_INTERVAL_MS,
-    retryDelays: [5000, 3000, 4000, 8000, 10000],
+    retryDelays: [5000, 4000, 4000, 8000, 10000],
   });
   startEventLine();
   void runBookingBurstWorker(() => session);
@@ -606,8 +678,10 @@ async function runWatcher() {
 
       if (filteredByRange.length === 0) {
         if (fightModeActive) {
+          combatStats.fightClearedCount += 1;
           startEventLine();
           console.log("🧹 FIGHT MODE CLEARED | no slots in current fetch");
+          logCombatSummary("no-slots-in-fetch");
         }
 
         clearFightState();
@@ -634,7 +708,12 @@ async function runWatcher() {
 
           // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
+          const wasFightModeActive = fightModeActive;
           updateFightState(newSlots);
+
+          if (!wasFightModeActive) {
+            resetCombatStatsForNewFight();
+          }
 
           startEventLine();
           console.log(`🔥 FIGHT MODE ARMED | slots: ${newSlots.length}`);

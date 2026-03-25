@@ -129,7 +129,7 @@ async function fetchSchedule(session, payload, config) {
 const { logFetch } = require("./logger");
 
 async function fetchWithRetry(fn, retries = 5) {
-  const delaysMs = [5000, 3000, 4000, 8000, 10000];
+  const delaysMs = [5000, 4000, 4000, 8000, 10000];
 
   const startTime = Date.now();
   let attempt = 0;
