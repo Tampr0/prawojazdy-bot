@@ -237,6 +237,7 @@ async function runBookingBurstWorker(getSession) {
       bookingInProgress = true;
       startEventLine();
       console.log(`🔥 BURST ROUND START | slots: ${slots.length}`);
+      const isFirstBurstRound = fightModeLastSeenAt > 0 && Date.now() - fightModeLastSeenAt < BOOKING_BURST_INTERVAL_MS + 250;
 
       for (const slot of slots) {
         if (!slot || !slot.id || globalBookingSuccess) {
@@ -277,7 +278,7 @@ async function runBookingBurstWorker(getSession) {
             await page.goto(paymentUrl);
           }
 
-          if (result && result.id) {
+          if (result && result.id && isFirstBurstRound) {
             await sendTelegramMessage(
               `🔥 PRÓBA REZERWACJI
 
