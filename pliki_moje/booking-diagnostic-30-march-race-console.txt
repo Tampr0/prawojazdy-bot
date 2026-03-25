@@ -1,0 +1,425 @@
+SESSION READY
+STATUS | 07:14:45 | slots: 1 | session: OK   
+[2026-03-25T07:14:45] [INFO] 2026-03-30 15:00 | wordId: 3
+Wiadomosc Telegram wyslana poprawnie
+
+🔥 ALL-IN BOOKING START
+BOOKING ROUND: 1/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"32caa035-a495-4a6d-87b0-63d20d97291f"}
+BOOK RESPONSE: {
+  id: '32caa035-a495-4a6d-87b0-63d20d97291f',
+  __diagnostics: {
+    reservationId: '32caa035-a495-4a6d-87b0-63d20d97291f',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/32caa035-a495-4a6d-87b0-63d20d97291f/platnosc
+🌐 OPENING PAYMENT PAGE...
+Wiadomosc Telegram wyslana poprawnie
+BOOKING ROUND: 2/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"2c593258-3902-4fc2-bd10-d2a999122184"}
+BOOK RESPONSE: {
+  id: '2c593258-3902-4fc2-bd10-d2a999122184',
+  __diagnostics: {
+    reservationId: '2c593258-3902-4fc2-bd10-d2a999122184',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/2c593258-3902-4fc2-bd10-d2a999122184/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 3/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"ea13bf64-cbb4-48ea-b844-a2fc81c65395"}
+BOOK RESPONSE: {
+  id: 'ea13bf64-cbb4-48ea-b844-a2fc81c65395',
+  __diagnostics: {
+    reservationId: 'ea13bf64-cbb4-48ea-b844-a2fc81c65395',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/ea13bf64-cbb4-48ea-b844-a2fc81c65395/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 4/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"b7463ec7-8479-417e-aacb-238c859cd90d"}
+BOOK RESPONSE: {
+  id: 'b7463ec7-8479-417e-aacb-238c859cd90d',
+  __diagnostics: {
+    reservationId: 'b7463ec7-8479-417e-aacb-238c859cd90d',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/b7463ec7-8479-417e-aacb-238c859cd90d/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 5/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"fcf9b937-bda2-426b-9d0e-74afa512dead"}
+BOOK RESPONSE: {
+  id: 'fcf9b937-bda2-426b-9d0e-74afa512dead',
+  __diagnostics: {
+    reservationId: 'fcf9b937-bda2-426b-9d0e-74afa512dead',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+BOOKING ROUND: 6/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"2fdaf64f-213e-4a1c-8274-665f842006d0"}
+BOOK RESPONSE: {
+  id: '2fdaf64f-213e-4a1c-8274-665f842006d0',
+  __diagnostics: {
+    reservationId: '2fdaf64f-213e-4a1c-8274-665f842006d0',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/2fdaf64f-213e-4a1c-8274-665f842006d0/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 7/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"d025a025-547f-4bd5-8c06-71faa63dd075"}
+BOOK RESPONSE: {
+  id: 'd025a025-547f-4bd5-8c06-71faa63dd075',
+  __diagnostics: {
+    reservationId: 'd025a025-547f-4bd5-8c06-71faa63dd075',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/d025a025-547f-4bd5-8c06-71faa63dd075/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 8/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"5fe6934d-bf20-4588-b7d8-db6e685c3d6d"}
+BOOK RESPONSE: {
+  id: '5fe6934d-bf20-4588-b7d8-db6e685c3d6d',
+  __diagnostics: {
+    reservationId: '5fe6934d-bf20-4588-b7d8-db6e685c3d6d',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/5fe6934d-bf20-4588-b7d8-db6e685c3d6d/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 9/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"3ebfcb8a-ba4f-407c-b6c2-3da0bb4e9180"}
+BOOK RESPONSE: {
+  id: '3ebfcb8a-ba4f-407c-b6c2-3da0bb4e9180',
+  __diagnostics: {
+    reservationId: '3ebfcb8a-ba4f-407c-b6c2-3da0bb4e9180',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/3ebfcb8a-ba4f-407c-b6c2-3da0bb4e9180/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 10/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"9ff42181-6ead-4661-bb87-cc44a690dfb0"}
+BOOK RESPONSE: {
+  id: '9ff42181-6ead-4661-bb87-cc44a690dfb0',
+  __diagnostics: {
+    reservationId: '9ff42181-6ead-4661-bb87-cc44a690dfb0',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/9ff42181-6ead-4661-bb87-cc44a690dfb0/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 11/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"b3a4a80d-51bd-4c3a-9ec4-c17013034e6e"}
+BOOK RESPONSE: {
+  id: 'b3a4a80d-51bd-4c3a-9ec4-c17013034e6e',
+  __diagnostics: {
+    reservationId: 'b3a4a80d-51bd-4c3a-9ec4-c17013034e6e',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/b3a4a80d-51bd-4c3a-9ec4-c17013034e6e/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 12/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"b049321a-8d7a-4eb0-a043-e7d5df76f805"}
+BOOK RESPONSE: {
+  id: 'b049321a-8d7a-4eb0-a043-e7d5df76f805',
+  __diagnostics: {
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/b3a4a80d-51bd-4c3a-9ec4-c17013034e6e/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 12/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"b049321a-8d7a-4eb0-a043-e7d5df76f805"}
+BOOK RESPONSE: {
+  id: 'b049321a-8d7a-4eb0-a043-e7d5df76f805',
+  __diagnostics: {
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 12/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"b049321a-8d7a-4eb0-a043-e7d5df76f805"}
+BOOK RESPONSE: {
+  id: 'b049321a-8d7a-4eb0-a043-e7d5df76f805',
+  __diagnostics: {
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"b049321a-8d7a-4eb0-a043-e7d5df76f805"}
+BOOK RESPONSE: {
+  id: 'b049321a-8d7a-4eb0-a043-e7d5df76f805',
+  __diagnostics: {
+BOOK STATUS: 201
+BOOK BODY: {"id":"b049321a-8d7a-4eb0-a043-e7d5df76f805"}
+BOOK RESPONSE: {
+  id: 'b049321a-8d7a-4eb0-a043-e7d5df76f805',
+  __diagnostics: {
+BOOK RESPONSE: {
+  id: 'b049321a-8d7a-4eb0-a043-e7d5df76f805',
+  __diagnostics: {
+  __diagnostics: {
+    reservationId: 'b049321a-8d7a-4eb0-a043-e7d5df76f805',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/b049321a-8d7a-4eb0-a043-e7d5df76f805/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 13/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"b5bdada8-3c9d-4be2-b802-9795bcca2a1c"}
+BOOK RESPONSE: {
+  id: 'b5bdada8-3c9d-4be2-b802-9795bcca2a1c',
+  __diagnostics: {
+    reservationId: 'b5bdada8-3c9d-4be2-b802-9795bcca2a1c',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/b5bdada8-3c9d-4be2-b802-9795bcca2a1c/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 14/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"82f0c8ba-9bb9-41f3-8d01-9b0c8dd19d7e"}
+BOOK RESPONSE: {
+  id: '82f0c8ba-9bb9-41f3-8d01-9b0c8dd19d7e',
+  __diagnostics: {
+    reservationId: '82f0c8ba-9bb9-41f3-8d01-9b0c8dd19d7e',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/82f0c8ba-9bb9-41f3-8d01-9b0c8dd19d7e/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 15/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"d851137f-3e4d-4e69-a616-2c652e6aaa98"}
+BOOK RESPONSE: {
+  id: 'd851137f-3e4d-4e69-a616-2c652e6aaa98',
+  __diagnostics: {
+    reservationId: 'd851137f-3e4d-4e69-a616-2c652e6aaa98',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/d851137f-3e4d-4e69-a616-2c652e6aaa98/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 16/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"4efb5045-ef58-4377-a42e-30ac2688c896"}
+BOOK RESPONSE: {
+  id: '4efb5045-ef58-4377-a42e-30ac2688c896',
+  __diagnostics: {
+    reservationId: '4efb5045-ef58-4377-a42e-30ac2688c896',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/4efb5045-ef58-4377-a42e-30ac2688c896/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 17/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"7d81b997-c279-4d81-8bce-5b8983535757"}
+BOOK RESPONSE: {
+  id: '7d81b997-c279-4d81-8bce-5b8983535757',
+  __diagnostics: {
+    reservationId: '7d81b997-c279-4d81-8bce-5b8983535757',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/7d81b997-c279-4d81-8bce-5b8983535757/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 18/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"c44f29e5-3b27-4b23-ab4e-7df7fd70debd"}
+BOOK RESPONSE: {
+  id: 'c44f29e5-3b27-4b23-ab4e-7df7fd70debd',
+  __diagnostics: {
+    reservationId: 'c44f29e5-3b27-4b23-ab4e-7df7fd70debd',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/c44f29e5-3b27-4b23-ab4e-7df7fd70debd/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 19/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"58851bcd-3fb3-462e-82aa-be061ad5c693"}
+BOOK RESPONSE: {
+  id: '58851bcd-3fb3-462e-82aa-be061ad5c693',
+  __diagnostics: {
+    reservationId: '58851bcd-3fb3-462e-82aa-be061ad5c693',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/58851bcd-3fb3-462e-82aa-be061ad5c693/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 20/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"7b457981-a774-472f-ad4c-c107880e057c"}
+BOOK RESPONSE: {
+  id: '7b457981-a774-472f-ad4c-c107880e057c',
+  __diagnostics: {
+    reservationId: '7b457981-a774-472f-ad4c-c107880e057c',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/7b457981-a774-472f-ad4c-c107880e057c/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 21/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"e3277ecb-c0f8-4c18-b35c-57d1e46c12e6"}
+BOOK RESPONSE: {
+  id: 'e3277ecb-c0f8-4c18-b35c-57d1e46c12e6',
+  __diagnostics: {
+    reservationId: 'e3277ecb-c0f8-4c18-b35c-57d1e46c12e6',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/e3277ecb-c0f8-4c18-b35c-57d1e46c12e6/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 22/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"83585c79-28dd-43dc-8ce4-6e183e2e1738"}
+BOOK RESPONSE: {
+  id: '83585c79-28dd-43dc-8ce4-6e183e2e1738',
+  __diagnostics: {
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}
+PAYMENT URL: https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/83585c79-28dd-43dc-8ce4-6e183e2e1738/platnosc
+🌐 OPENING PAYMENT PAGE...
+BOOKING ROUND: 23/50
+TRY API BOOKING: 2612015295903603085 2026-03-30T15:00:00 15:00:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"95248dae-67f0-444a-ae29-257f032e9f14"}
+BOOK RESPONSE: {
+  id: '95248dae-67f0-444a-ae29-257f032e9f14',
+  __diagnostics: {
+    reservationId: '95248dae-67f0-444a-ae29-257f032e9f14',
+    expireTimeDiagnostics: {
+      pollResults: [Array],
+      firstNonNullExpireTime: null,
+      firstNonNullAttempt: null
+    }
+  }
+}

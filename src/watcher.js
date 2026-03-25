@@ -13,7 +13,7 @@ const { writeDiagnosticEvent } = require("./bookingDiagnostics");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 8000;
+const POLL_INTERVAL_MS = 7000;
 const BOOKING_LOOP_DELAY_MS = 1500; // 1.5s między próbami
 const BOOKING_MAX_ROUNDS = 50; // ile razy przejechać po liście
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
@@ -190,7 +190,7 @@ async function runWatcher() {
   logInfo(`Watcher uruchomiony. Interwal: ${POLL_INTERVAL_MS / 1000}s`);
   logFetchHeader({
     pollInterval: POLL_INTERVAL_MS,
-    retryDelays: [3000, 4000, 5000, 6000, 10000],
+    retryDelays: [5000, 3000, 4000, 8000, 10000],
   });
   startEventLine();
 

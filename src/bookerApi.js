@@ -4,6 +4,7 @@ const {
   redactHeaders,
   redactBody,
 } = require("./bookingDiagnostics");
+const { getSessionPage } = require("./session");
 
 function extractCookiePairsFromSetCookie(setCookieHeaders = []) {
   if (!Array.isArray(setCookieHeaders)) {
@@ -57,6 +58,200 @@ function mergeCookieHeaders(baseCookieHeader = "", extraCookiePairs = []) {
     .join("; ");
 }
 
+function getBookingReferer() {
+  const page = getSessionPage();
+
+  if (page && !page.isClosed()) {
+    const currentUrl = page.url();
+
+    if (currentUrl && currentUrl.startsWith("https://info-car.pl/")) {
+      return currentUrl;
+    }
+  }
+
+  return "https://info-car.pl/new/prawo-jazdy/sprawdz-wolny-termin/wybor-terminu";
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function extractExpireTimeValue(parsed) {
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+
+  if (parsed.expireTime == null) {
+    return null;
+  }
+
+  const numericValue = Number(parsed.expireTime);
+
+  if (Number.isNaN(numericValue)) {
+    return null;
+  }
+
+  return numericValue;
+}
+
+async function pollExpireTimeDiagnostic({
+  session,
+  slot,
+  reservationId,
+  cookieHeaderOverride,
+}) {
+  const expireTimeUrl = `https://info-car.pl/api/word/reservations/${reservationId}/expire/time`;
+
+  const pollDelaysMs = [0, 300, 700, 1500, 2500, 4000];
+  const pollResults = [];
+
+  writeDiagnosticEvent({
+    source: "API",
+    kind: "expire-time-polling-start",
+    method: "GET",
+    url: expireTimeUrl,
+    reservationId,
+    pollPlanMs: pollDelaysMs,
+    slot: {
+      id: slot.id,
+      date: slot.date,
+      time: slot.time,
+      wordId: slot.wordId,
+      amount: slot.amount ?? null,
+      places: slot.places ?? null,
+    },
+    note: "Starting expire/time polling diagnostics after successful booking",
+  });
+
+  for (let index = 0; index < pollDelaysMs.length; index++) {
+    const delayMs = pollDelaysMs[index];
+
+    if (delayMs > 0) {
+      await sleep(delayMs);
+    }
+
+    const response = await runDiagnosticGet({
+      session,
+      slot,
+      url: expireTimeUrl,
+      label: `reservation-expire-time-poll-${index + 1}`,
+      cookieHeaderOverride,
+    });
+
+    const expireTimeValue = extractExpireTimeValue(response.parsed);
+
+    pollResults.push({
+      attempt: index + 1,
+      delayMs,
+      status: response.status,
+      ok: response.ok,
+      expireTime: expireTimeValue,
+      rawParsed: response.parsed ?? null,
+      error: response.error ?? null,
+    });
+
+    writeDiagnosticEvent({
+      source: "API",
+      kind: "expire-time-polling-attempt",
+      method: "GET",
+      url: expireTimeUrl,
+      reservationId,
+      attempt: index + 1,
+      delayMs,
+      status: response.status,
+      ok: response.ok,
+      expireTime: expireTimeValue,
+      parsedBody: redactBody(response.parsed),
+      errorMessage: response.error ?? null,
+      slot: {
+        id: slot.id,
+        date: slot.date,
+        time: slot.time,
+        wordId: slot.wordId,
+        amount: slot.amount ?? null,
+        places: slot.places ?? null,
+      },
+      note: "Expire/time polling attempt completed",
+    });
+
+    if (expireTimeValue !== null) {
+      writeDiagnosticEvent({
+        source: "API",
+        kind: "expire-time-polling-hit",
+        method: "GET",
+        url: expireTimeUrl,
+        reservationId,
+        attempt: index + 1,
+        delayMs,
+        expireTime: expireTimeValue,
+        slot: {
+          id: slot.id,
+          date: slot.date,
+          time: slot.time,
+          wordId: slot.wordId,
+          amount: slot.amount ?? null,
+          places: slot.places ?? null,
+        },
+        note: "Expire/time returned numeric value during polling",
+      });
+
+      break;
+    }
+  }
+
+  const firstNonNullResult =
+    pollResults.find((entry) => entry.expireTime !== null) || null;
+
+  writeDiagnosticEvent({
+    source: "API",
+    kind: "expire-time-polling-summary",
+    method: "GET",
+    url: expireTimeUrl,
+    reservationId,
+    firstNonNullExpireTime:
+      firstNonNullResult ? firstNonNullResult.expireTime : null,
+    firstNonNullAttempt:
+      firstNonNullResult ? firstNonNullResult.attempt : null,
+    pollResults,
+    slot: {
+      id: slot.id,
+      date: slot.date,
+      time: slot.time,
+      wordId: slot.wordId,
+      amount: slot.amount ?? null,
+      places: slot.places ?? null,
+    },
+    note: "Expire/time polling diagnostics finished",
+  });
+
+  return {
+    pollResults,
+    firstNonNullExpireTime: firstNonNullResult
+      ? firstNonNullResult.expireTime
+      : null,
+    firstNonNullAttempt: firstNonNullResult
+      ? firstNonNullResult.attempt
+      : null,
+  };
+}
+
+function buildBrowserLikeHeaders(session, cookieHeader, extraHeaders = {}) {
+  return {
+    Authorization: `Bearer ${session.bearerToken}`,
+    Accept: "application/json, text/plain, */*",
+    "Accept-Language": "pl-PL,pl;q=0.9",
+    "Content-Type": "application/json",
+    Cookie: cookieHeader,
+    Origin: "https://info-car.pl",
+    Referer: getBookingReferer(),
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
+    "User-Agent": session.userAgent || "Mozilla/5.0",
+    ...extraHeaders,
+  };
+}
+
 async function runDiagnosticGet({
   session,
   slot,
@@ -70,12 +265,11 @@ async function runDiagnosticGet({
       .map((c) => `${c.name}=${c.value}`)
       .join("; ");
 
-  const requestHeaders = {
-    Authorization: `Bearer ${session.bearerToken}`,
-    Accept: "application/json",
-    Cookie: cookieHeader,
-    "User-Agent": session.userAgent || "Mozilla/5.0",
-  };
+  const requestHeaders = buildBrowserLikeHeaders(session, cookieHeader, {
+    "Content-Type": undefined,
+  });
+
+  delete requestHeaders["Content-Type"];
 
   const startedAt = Date.now();
 
@@ -219,13 +413,7 @@ async function bookSlotAPI(session, slot) {
     },
   };
 
-  const requestHeaders = {
-    Authorization: `Bearer ${session.bearerToken}`,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    Cookie: cookieHeader,
-    "User-Agent": session.userAgent || "Mozilla/5.0",
-  };
+  const requestHeaders = buildBrowserLikeHeaders(session, cookieHeader);
 
   const requestBody = JSON.stringify(payload);
   const startedAt = Date.now();
@@ -381,9 +569,10 @@ async function bookSlotAPI(session, slot) {
     note: "Starting diagnostic follow-up requests after successful booking",
   });
 
+  let expireTimeDiagnostics = null;
+
   if (reservationId) {
     const reservationDetailsUrl = `https://info-car.pl/api/word/reservations/${reservationId}`;
-    const expireTimeUrl = `https://info-car.pl/api/word/reservations/${reservationId}/expire/time`;
 
     await runDiagnosticGet({
       session,
@@ -393,11 +582,10 @@ async function bookSlotAPI(session, slot) {
       cookieHeaderOverride: diagnosticCookieHeader,
     });
 
-    await runDiagnosticGet({
+    expireTimeDiagnostics = await pollExpireTimeDiagnostic({
       session,
       slot,
-      url: expireTimeUrl,
-      label: "reservation-expire-time",
+      reservationId,
       cookieHeaderOverride: diagnosticCookieHeader,
     });
   } else {
@@ -419,7 +607,13 @@ async function bookSlotAPI(session, slot) {
     });
   }
 
-  return parsed;
+  return {
+    ...parsed,
+    __diagnostics: {
+      reservationId,
+      expireTimeDiagnostics,
+    },
+  };
 }
 
 
