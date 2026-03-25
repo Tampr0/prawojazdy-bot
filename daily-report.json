@@ -229,7 +229,7 @@
   },
   "2026-03-25": {
     "appearByHour": {
-      "10": 0,
+      "10": 2,
       "11": 0,
       "12": 0,
       "13": 0,
@@ -280,7 +280,7 @@
       "08": 3,
       "09": 8
     },
-    "totalAppeared": 9,
+    "totalAppeared": 11,
     "totalDisappeared": 16,
     "avgLifetimeSeconds": 154282
   }

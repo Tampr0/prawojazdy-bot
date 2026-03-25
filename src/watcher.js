@@ -13,10 +13,12 @@ const { writeDiagnosticEvent } = require("./bookingDiagnostics");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 8000;
+const POLL_INTERVAL_MS = 7000;
 const BOOKING_LOOP_DELAY_MS = 400; // delay between slot booking attempts inside one burst round
 const BOOKING_BURST_INTERVAL_MS = 1000; // delay between booking rounds in background worker
 const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
+const VALIDATION_QUEUE_MAX = 3; // keep only the newest few validation candidates
+const VALIDATION_CANDIDATE_MAX_AGE_MS = 12000; // drop stale queued candidates
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -240,20 +242,36 @@ function buildPaymentUrlFromReservationId(reservationId) {
   return `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${reservationId}/platnosc`;
 }
 
+function isValidationCandidateFresh(candidate) {
+  if (!candidate || !candidate.storedAt) {
+    return false;
+  }
+
+  return Date.now() - candidate.storedAt <= VALIDATION_CANDIDATE_MAX_AGE_MS;
+}
+
 function enqueueReservationCandidate(candidate) {
-  if (!candidate || !candidate.reservationId || !candidate.slot) {
+  if (!candidate || !candidate.reservationId || !candidate.slot || !candidate.slot.id) {
     return;
   }
 
+  const freshExisting = pendingReservationCandidates.filter(isValidationCandidateFresh);
+
   pendingReservationCandidates = [
     candidate,
-    ...pendingReservationCandidates.filter(
-      (entry) => entry.reservationId !== candidate.reservationId
+    ...freshExisting.filter(
+      (entry) =>
+        entry.reservationId !== candidate.reservationId &&
+        entry.slot &&
+        entry.slot.id !== candidate.slot.id
     ),
-  ].slice(0, 10);
+  ].slice(0, VALIDATION_QUEUE_MAX);
 }
 
 function takeNextReservationCandidate() {
+  pendingReservationCandidates =
+    pendingReservationCandidates.filter(isValidationCandidateFresh);
+
   if (pendingReservationCandidates.length === 0) {
     return null;
   }
@@ -354,7 +372,9 @@ async function runBookingBurstWorker(getSession) {
             slot: candidate.slot,
             diagnostics: candidate.diagnostics,
             pendingQueueLength: pendingReservationCandidates.length,
-            note: "Reservation POST returned candidate result; queued for background validation",
+            validationQueueMax: VALIDATION_QUEUE_MAX,
+            candidateMaxAgeMs: VALIDATION_CANDIDATE_MAX_AGE_MS,
+            note: "Reservation POST returned candidate result; queued with newest-first slot-aware validation policy",
           });
         } catch (apiError) {
           const msg = String(apiError?.message || apiError);
@@ -418,9 +438,17 @@ async function runReservationValidationWorker() {
         continue;
       }
 
+      const queueLengthBeforeTake = pendingReservationCandidates.length;
       const candidate = takeNextReservationCandidate();
+      const queueLengthAfterTake = pendingReservationCandidates.length;
 
       if (!candidate) {
+        if (queueLengthBeforeTake !== queueLengthAfterTake) {
+          console.log(
+            `🧹 VALIDATION QUEUE CLEANUP | before: ${queueLengthBeforeTake} | after: ${queueLengthAfterTake}`
+          );
+        }
+
         await sleep(100);
         continue;
       }
