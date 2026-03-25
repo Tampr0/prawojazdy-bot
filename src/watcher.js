@@ -17,8 +17,7 @@ const POLL_INTERVAL_MS = 6000;
 const BOOKING_LOOP_DELAY_MS = 400; // delay between slot booking attempts inside one burst round
 const BOOKING_BURST_INTERVAL_MS = 500; // delay between booking rounds in background worker
 const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
-const VALIDATION_QUEUE_MAX = 3; // keep only the newest few validation candidates
-const VALIDATION_CANDIDATE_MAX_AGE_MS = 12000; // drop stale queued candidates
+const MAX_ACTIVE_SLOT_VALIDATIONS = 2;
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -33,11 +32,9 @@ let burstWorkerStarted = false;
 let fightModeActive = false;
 let fightSlotsSnapshot = [];
 let fightModeLastSeenAt = 0;
-let lastReservationCandidate = null;
 
 let validationWorkerStarted = false;
-let pendingReservationCandidates = [];
-let activeReservationValidation = null;
+let slotCombatState = new Map();
 
 let combatStats = createEmptyCombatStats();
 
@@ -262,70 +259,185 @@ function getFightSlotsSnapshot() {
   return fightSlotsSnapshot.map(cloneFightSlot);
 }
 
-function storeReservationCandidate(slot, result) {
+function createSlotCombatState(slotId) {
+  return {
+    slotId,
+    pausedBecause422: false,
+    activeValidation: null,
+    recentCandidates: [],
+    last422At: 0,
+    new201After422: false,
+  };
+}
+
+function getSlotCombatState(slotId) {
+  if (!slotId) {
+    return null;
+  }
+
+  if (!slotCombatState.has(slotId)) {
+    slotCombatState.set(slotId, createSlotCombatState(slotId));
+  }
+
+  return slotCombatState.get(slotId);
+}
+
+function cleanupSlotCombatState(slotId) {
+  const state = slotCombatState.get(slotId);
+
+  if (!state) {
+    return;
+  }
+
+  const hasActiveValidation = !!state.activeValidation;
+  const hasRecentCandidates =
+    Array.isArray(state.recentCandidates) && state.recentCandidates.length > 0;
+
+  if (!state.pausedBecause422 && !hasActiveValidation && !hasRecentCandidates) {
+    slotCombatState.delete(slotId);
+  }
+}
+
+function resetSlotPause(slotId) {
+  const state = getSlotCombatState(slotId);
+
+  if (!state) {
+    return;
+  }
+
+  state.pausedBecause422 = false;
+  state.last422At = 0;
+  state.new201After422 = false;
+  state.activeValidation = null;
+  cleanupSlotCombatState(slotId);
+}
+
+function pauseSlotAfter422(slotId) {
+  const state = getSlotCombatState(slotId);
+
+  if (!state) {
+    return;
+  }
+
+  state.pausedBecause422 = true;
+  state.last422At = Date.now();
+  state.new201After422 = false;
+}
+
+function addSlotReservationCandidate(slot, result, session) {
   const reservationId =
     result?.__diagnostics?.reservationId ||
     result?.id ||
     null;
 
-  lastReservationCandidate = {
+  if (!slot || !slot.id || !reservationId) {
+    return null;
+  }
+
+  const candidate = {
     storedAt: Date.now(),
     reservationId,
-    slot: slot
-      ? {
-          id: slot.id,
-          date: slot.date,
-          time: slot.time,
-          wordId: slot.wordId,
-          amount: slot.amount ?? null,
-          places: slot.places ?? null,
-        }
-      : null,
+    slot: {
+      id: slot.id,
+      date: slot.date,
+      time: slot.time,
+      wordId: slot.wordId,
+      amount: slot.amount ?? null,
+      places: slot.places ?? null,
+    },
     diagnostics: result?.__diagnostics || null,
+    session,
   };
 
-  return lastReservationCandidate;
+  const state = getSlotCombatState(slot.id);
+
+  if (!state) {
+    return candidate;
+  }
+
+  state.recentCandidates = [
+    candidate,
+    ...(state.recentCandidates || []).filter(
+      (entry) => entry && entry.reservationId !== candidate.reservationId
+    ),
+  ].slice(0, 2);
+
+  return candidate;
 }
 
 function buildPaymentUrlFromReservationId(reservationId) {
   return `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${reservationId}/platnosc`;
 }
 
-function isValidationCandidateFresh(candidate) {
-  if (!candidate || !candidate.storedAt) {
-    return false;
+function getCandidatesToValidateForSlot(slotId) {
+  const state = getSlotCombatState(slotId);
+
+  if (!state) {
+    return [];
   }
 
-  return Date.now() - candidate.storedAt <= VALIDATION_CANDIDATE_MAX_AGE_MS;
+  state.recentCandidates = (state.recentCandidates || [])
+    .filter((candidate) => candidate && candidate.reservationId)
+    .slice(0, 2);
+
+  return state.recentCandidates;
 }
 
-function enqueueReservationCandidate(candidate) {
-  if (!candidate || !candidate.reservationId || !candidate.slot || !candidate.slot.id) {
+function clearSlotCandidates(slotId) {
+  const state = getSlotCombatState(slotId);
+
+  if (!state) {
     return;
   }
 
-  const freshExisting = pendingReservationCandidates.filter(isValidationCandidateFresh);
-
-  pendingReservationCandidates = [
-    candidate,
-    ...freshExisting.filter(
-      (entry) =>
-        entry.reservationId !== candidate.reservationId &&
-        entry.slot &&
-        entry.slot.id !== candidate.slot.id
-    ),
-  ].slice(0, VALIDATION_QUEUE_MAX);
+  state.recentCandidates = [];
+  cleanupSlotCombatState(slotId);
 }
 
-function takeNextReservationCandidate() {
-  pendingReservationCandidates =
-    pendingReservationCandidates.filter(isValidationCandidateFresh);
+function markNew201After422(slotId) {
+  const state = getSlotCombatState(slotId);
 
-  if (pendingReservationCandidates.length === 0) {
-    return null;
+  if (!state || !state.pausedBecause422) {
+    return;
   }
 
-  return pendingReservationCandidates.shift() || null;
+  state.new201After422 = true;
+}
+
+function resetSlotSuspicion(slotId) {
+  const state = getSlotCombatState(slotId);
+
+  if (!state) {
+    return;
+  }
+
+  state.new201After422 = false;
+}
+
+function shouldSkipSecondOldCandidate(slotId) {
+  const state = getSlotCombatState(slotId);
+
+  if (!state) {
+    return false;
+  }
+
+  return !!state.new201After422;
+}
+
+function clearAllSlotCombatState() {
+  slotCombatState.clear();
+}
+
+function getActiveSlotValidationCount() {
+  let count = 0;
+
+  for (const state of slotCombatState.values()) {
+    if (state?.activeValidation) {
+      count += 1;
+    }
+  }
+
+  return count;
 }
 
 function isFightModeStale() {
@@ -408,27 +520,30 @@ async function runBookingBurstWorker(getSession) {
           console.log("BOOK RESPONSE:", result);
 
           combatStats.reservationCandidates201 += 1;
-          const candidate = storeReservationCandidate(slot, {
+          const candidate = addSlotReservationCandidate(slot, {
             ...result,
             __diagnostics: {
               ...(result?.__diagnostics || {}),
             },
-          });
-
-          candidate.session = session;
-          enqueueReservationCandidate(candidate);
+          }, session);
 
           console.log("RESERVATION CANDIDATE:", candidate);
+
+          const slotState = getSlotCombatState(slot.id);
+
+          if (slotState?.pausedBecause422) {
+            markNew201After422(slot.id);
+          }
 
           writeDiagnosticEvent({
             source: "WATCHER",
             kind: "reservation-candidate",
-            reservationId: candidate.reservationId,
-            slot: candidate.slot,
-            diagnostics: candidate.diagnostics,
-            pendingQueueLength: pendingReservationCandidates.length,
-            validationQueueMax: VALIDATION_QUEUE_MAX,
-            candidateMaxAgeMs: VALIDATION_CANDIDATE_MAX_AGE_MS,
+            reservationId: candidate?.reservationId || null,
+            slot: candidate?.slot || null,
+            diagnostics: candidate?.diagnostics || null,
+            slotPaused: slotState ? slotState.pausedBecause422 : false,
+            slotQueuedCandidates: slotState ? slotState.recentCandidates.length : 0,
+            new201After422: slotState ? slotState.new201After422 : false,
             combatStatsSnapshot: {
               burstRounds: combatStats.burstRounds,
               reservationAttempts: combatStats.reservationAttempts,
@@ -438,7 +553,7 @@ async function runBookingBurstWorker(getSession) {
               validationSuccesses: combatStats.validationSuccesses,
               validationNullFinishes: combatStats.validationNullFinishes,
             },
-            note: "Reservation POST returned candidate result; queued with newest-first slot-aware validation policy",
+            note: "Reservation POST returned candidate result; stored in slot-local recent reservation candidates",
           });
         } catch (apiError) {
           const msg = String(apiError?.message || apiError);
@@ -448,6 +563,11 @@ async function runBookingBurstWorker(getSession) {
           if (msg.includes("422")) {
             console.log("ℹ️ 422 another-started - keeping burst alive, no success assumption");
             combatStats.reservation422 += 1;
+
+            pauseSlotAfter422(slot.id);
+            console.log("SLOT PAUSED AFTER 422:", slot.id);
+
+            const slotState = getSlotCombatState(slot.id);
 
             writeDiagnosticEvent({
               source: "WATCHER",
@@ -461,7 +581,9 @@ async function runBookingBurstWorker(getSession) {
                 places: slot.places ?? null,
               },
               errorMessage: msg,
-              note: "Reservation returned 422; treated as non-success candidate failure",
+              slotPaused: true,
+              slotQueuedCandidates: slotState ? slotState.recentCandidates.length : 0,
+              note: "Reservation returned 422; slot paused and moved into slot-local validation mode",
             });
 
             continue;
@@ -499,97 +621,167 @@ async function runReservationValidationWorker() {
         continue;
       }
 
-      if (activeReservationValidation) {
+      if (getActiveSlotValidationCount() >= MAX_ACTIVE_SLOT_VALIDATIONS) {
         await sleep(100);
         continue;
       }
 
-      const queueLengthBeforeTake = pendingReservationCandidates.length;
-      const candidate = takeNextReservationCandidate();
-      const queueLengthAfterTake = pendingReservationCandidates.length;
-
-      if (!candidate) {
-        if (queueLengthBeforeTake !== queueLengthAfterTake) {
-          console.log(
-            `🧹 VALIDATION QUEUE CLEANUP | before: ${queueLengthBeforeTake} | after: ${queueLengthAfterTake}`
-          );
+      for (const state of slotCombatState.values()) {
+        if (!state || !state.pausedBecause422) {
+          continue;
         }
 
-        await sleep(100);
-        continue;
-      }
+        if (state.activeValidation) {
+          continue;
+        }
 
-      activeReservationValidation = candidate;
-      combatStats.validationStarts += 1;
+        const candidates = getCandidatesToValidateForSlot(state.slotId);
 
-      const diagnostics = candidate.diagnostics || {};
-      const reservationId = candidate.reservationId;
-      const diagnosticCookieHeader = diagnostics.diagnosticCookieHeader || null;
+        if (candidates.length === 0) {
+          resetSlotPause(state.slotId);
+          clearSlotCandidates(state.slotId);
+          continue;
+        }
 
-      writeDiagnosticEvent({
-        source: "WATCHER",
-        kind: "reservation-validation-start",
-        reservationId,
-        slot: candidate.slot,
-        diagnostics,
-        note: "Starting background reservation validation from watcher",
-      });
+        state.activeValidation = {
+          startedAt: Date.now(),
+          candidateReservationIds: candidates.map((candidate) => candidate.reservationId),
+        };
 
-      const validationResult = await pollExpireTimeDiagnostic({
-        session: activeReservationValidation.session,
-        slot: candidate.slot,
-        reservationId,
-        cookieHeaderOverride: diagnosticCookieHeader,
-      });
+        console.log("SLOT VALIDATION START:", state.slotId);
 
-      writeDiagnosticEvent({
-        source: "WATCHER",
-        kind: "reservation-validation-finished",
-        reservationId,
-        slot: candidate.slot,
-        validationResult,
-        note: "Finished background reservation validation from watcher",
-      });
+        void (async () => {
+          try {
+            const candidatesToValidate = getCandidatesToValidateForSlot(state.slotId).slice(0, 2);
+            let validated = false;
 
-      if (validationResult && validationResult.firstNonNullExpireTime !== null) {
-        combatStats.validationSuccesses += 1;
-        globalBookingSuccess = true;
-        clearFightState();
-        pendingReservationCandidates = [];
+            for (let index = 0; index < candidatesToValidate.length; index++) {
+              if (globalBookingSuccess) {
+                return;
+              }
 
-        const paymentUrl = buildPaymentUrlFromReservationId(reservationId);
+              const candidate = candidatesToValidate[index];
 
-        console.log("✅ VALIDATED RESERVATION:", reservationId, validationResult.firstNonNullExpireTime);
-        console.log("✅ VALIDATED PAYMENT URL:", paymentUrl);
-        logCombatSummary("validated-success");
+              if (!candidate || !candidate.reservationId) {
+                continue;
+              }
 
-        await sendTelegramMessage(
-          `🔥 POTWIERDZONA REZERWACJA
+              combatStats.validationStarts += 1;
+
+              console.log(`SLOT VALIDATION TRY ${index + 1}:`, candidate.reservationId);
+
+              const diagnostics = candidate.diagnostics || {};
+              const reservationId = candidate.reservationId;
+              const diagnosticCookieHeader = diagnostics.diagnosticCookieHeader || null;
+
+              writeDiagnosticEvent({
+                source: "WATCHER",
+                kind: "reservation-validation-start",
+                reservationId,
+                slot: candidate.slot,
+                diagnostics,
+                slotPaused: true,
+                note: "Starting slot-local background reservation validation from watcher",
+              });
+
+              const validationResult = await pollExpireTimeDiagnostic({
+                session: candidate.session,
+                slot: candidate.slot,
+                reservationId,
+                cookieHeaderOverride: diagnosticCookieHeader,
+              });
+
+              writeDiagnosticEvent({
+                source: "WATCHER",
+                kind: "reservation-validation-finished",
+                reservationId,
+                slot: candidate.slot,
+                validationResult,
+                slotPaused: true,
+                note: "Finished slot-local background reservation validation from watcher",
+              });
+
+              if (globalBookingSuccess) {
+                return;
+              }
+
+              if (validationResult && validationResult.firstNonNullExpireTime !== null) {
+                combatStats.validationSuccesses += 1;
+                globalBookingSuccess = true;
+                clearFightState();
+                clearAllSlotCombatState();
+
+                const paymentUrl = buildPaymentUrlFromReservationId(reservationId);
+
+                console.log("SLOT VALIDATION SUCCESS:", state.slotId, reservationId);
+                console.log("✅ VALIDATED RESERVATION:", reservationId, validationResult.firstNonNullExpireTime);
+                console.log("✅ VALIDATED PAYMENT URL:", paymentUrl);
+                logCombatSummary("validated-success");
+
+                await sendTelegramMessage(
+                  `🔥 POTWIERDZONA REZERWACJA
 
 📅 ${candidate.slot.date}
 ⏰ ${candidate.slot.time}
 
 💳 LINK:
 ${paymentUrl}`
-        );
+                );
 
-        const page = getSessionPage();
+                const page = getSessionPage();
 
-        if (page && !page.isClosed()) {
-          console.log("🌐 OPENING VALIDATED PAYMENT PAGE...");
-          await sleep(500);
-          await page.goto("https://info-car.pl/new/");
-          await sleep(500);
-          await page.goto(paymentUrl);
+                if (page && !page.isClosed()) {
+                  console.log("🌐 OPENING VALIDATED PAYMENT PAGE...");
+                  await sleep(500);
+                  await page.goto("https://info-car.pl/new/");
+                  await sleep(500);
+                  await page.goto(paymentUrl);
+                }
+
+                validated = true;
+                return;
+              }
+
+              if (index === 0 && shouldSkipSecondOldCandidate(state.slotId)) {
+                combatStats.validationNullFinishes += 1;
+                console.log("SLOT VALIDATION FAILED -> UNPAUSE:", state.slotId);
+                resetSlotSuspicion(state.slotId);
+                resetSlotPause(state.slotId);
+                clearSlotCandidates(state.slotId);
+                return;
+              }
+            }
+
+            if (!validated && !globalBookingSuccess) {
+              combatStats.validationNullFinishes += 1;
+              console.log("SLOT VALIDATION FAILED -> UNPAUSE:", state.slotId);
+              resetSlotSuspicion(state.slotId);
+              resetSlotPause(state.slotId);
+              clearSlotCandidates(state.slotId);
+            }
+          } catch (validationError) {
+            console.log("VALIDATION WORKER ERROR:", String(validationError?.message || validationError));
+            combatStats.validationWorkerErrors += 1;
+            resetSlotSuspicion(state.slotId);
+            resetSlotPause(state.slotId);
+            clearSlotCandidates(state.slotId);
+          } finally {
+            const currentState = slotCombatState.get(state.slotId);
+
+            if (currentState) {
+              currentState.activeValidation = null;
+              cleanupSlotCombatState(state.slotId);
+            }
+          }
+        })();
+
+        if (getActiveSlotValidationCount() >= MAX_ACTIVE_SLOT_VALIDATIONS) {
+          break;
         }
-      } else {
-        combatStats.validationNullFinishes += 1;
       }
-    } catch (validationError) {
-      console.log("VALIDATION WORKER ERROR:", String(validationError?.message || validationError));
+    } catch (validationWorkerLoopError) {
+      console.log("VALIDATION WORKER ERROR:", String(validationWorkerLoopError?.message || validationWorkerLoopError));
       combatStats.validationWorkerErrors += 1;
-    } finally {
-      activeReservationValidation = null;
     }
 
     await sleep(100);

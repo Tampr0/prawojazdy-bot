@@ -166,3 +166,5 @@ Call log:
     at async fetchWithRetry (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:141:22)
     at async runWatcher (C:\Users\kondo\Desktop\prawojazdy-bot\src\watcher.js:641:28)
 
+[2026-03-25T12:02:01] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T12:16:13] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
