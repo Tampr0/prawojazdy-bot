@@ -569,49 +569,13 @@ async function bookSlotAPI(session, slot) {
     note: "Starting diagnostic follow-up requests after successful booking",
   });
 
-  let expireTimeDiagnostics = null;
-
-  if (reservationId) {
-    const reservationDetailsUrl = `https://info-car.pl/api/word/reservations/${reservationId}`;
-
-    await runDiagnosticGet({
-      session,
-      slot,
-      url: reservationDetailsUrl,
-      label: "reservation-details",
-      cookieHeaderOverride: diagnosticCookieHeader,
-    });
-
-    expireTimeDiagnostics = await pollExpireTimeDiagnostic({
-      session,
-      slot,
-      reservationId,
-      cookieHeaderOverride: diagnosticCookieHeader,
-    });
-  } else {
-    writeDiagnosticEvent({
-      source: "API",
-      kind: "post-booking-diagnostics-skipped",
-      method: "POST",
-      url,
-      status,
-      slot: {
-        id: slot.id,
-        date: slot.date,
-        time: slot.time,
-        wordId: slot.wordId,
-        amount: slot.amount ?? null,
-        places: slot.places ?? null,
-      },
-      note: "Skipped diagnostic follow-up requests because reservationId was not available",
-    });
-  }
-
   return {
     ...parsed,
     __diagnostics: {
       reservationId,
-      expireTimeDiagnostics,
+      diagnosticCookieHeader,
+      setCookiePairs,
+      locationHeader,
     },
   };
 }
@@ -619,4 +583,5 @@ async function bookSlotAPI(session, slot) {
 
 module.exports = {
   bookSlotAPI,
+  pollExpireTimeDiagnostic,
 };

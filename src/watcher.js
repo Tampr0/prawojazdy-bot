@@ -2,7 +2,7 @@ const fs = require("fs/promises");
 const { loadConfig } = require("./config");
 const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
-const { bookSlotAPI } = require("./bookerApi");
+const { bookSlotAPI, pollExpireTimeDiagnostic } = require("./bookerApi");
 const { logInfo, logError, logStatus, logFetchHeader } = require("./logger");
 const { ensureSession, getSessionPage, resetBrowser } = require("./session");
 const { saveJson } = require("./storage");
@@ -32,6 +32,10 @@ let fightModeActive = false;
 let fightSlotsSnapshot = [];
 let fightModeLastSeenAt = 0;
 let lastReservationCandidate = null;
+
+let validationWorkerStarted = false;
+let pendingReservationCandidates = [];
+let activeReservationValidation = null;
 
 function getNextInterval() {
   return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000);
@@ -232,6 +236,31 @@ function storeReservationCandidate(slot, result) {
   return lastReservationCandidate;
 }
 
+function buildPaymentUrlFromReservationId(reservationId) {
+  return `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${reservationId}/platnosc`;
+}
+
+function enqueueReservationCandidate(candidate) {
+  if (!candidate || !candidate.reservationId || !candidate.slot) {
+    return;
+  }
+
+  pendingReservationCandidates = [
+    candidate,
+    ...pendingReservationCandidates.filter(
+      (entry) => entry.reservationId !== candidate.reservationId
+    ),
+  ].slice(0, 10);
+}
+
+function takeNextReservationCandidate() {
+  if (pendingReservationCandidates.length === 0) {
+    return null;
+  }
+
+  return pendingReservationCandidates.shift() || null;
+}
+
 function isFightModeStale() {
   if (!fightModeActive || fightModeLastSeenAt <= 0) {
     return false;
@@ -306,7 +335,15 @@ async function runBookingBurstWorker(getSession) {
 
           console.log("BOOK RESPONSE:", result);
 
-          const candidate = storeReservationCandidate(slot, result);
+          const candidate = storeReservationCandidate(slot, {
+            ...result,
+            __diagnostics: {
+              ...(result?.__diagnostics || {}),
+            },
+          });
+
+          candidate.session = session;
+          enqueueReservationCandidate(candidate);
 
           console.log("RESERVATION CANDIDATE:", candidate);
 
@@ -316,7 +353,8 @@ async function runBookingBurstWorker(getSession) {
             reservationId: candidate.reservationId,
             slot: candidate.slot,
             diagnostics: candidate.diagnostics,
-            note: "Reservation POST returned candidate result; waiting for later validation",
+            pendingQueueLength: pendingReservationCandidates.length,
+            note: "Reservation POST returned candidate result; queued for background validation",
           });
         } catch (apiError) {
           const msg = String(apiError?.message || apiError);
@@ -360,6 +398,104 @@ async function runBookingBurstWorker(getSession) {
   }
 }
 
+async function runReservationValidationWorker() {
+  if (validationWorkerStarted) {
+    return;
+  }
+
+  validationWorkerStarted = true;
+  console.log("🧪 RESERVATION VALIDATION WORKER STARTED");
+
+  while (true) {
+    try {
+      if (globalBookingSuccess) {
+        await sleep(1000);
+        continue;
+      }
+
+      if (activeReservationValidation) {
+        await sleep(100);
+        continue;
+      }
+
+      const candidate = takeNextReservationCandidate();
+
+      if (!candidate) {
+        await sleep(100);
+        continue;
+      }
+
+      activeReservationValidation = candidate;
+
+      const diagnostics = candidate.diagnostics || {};
+      const reservationId = candidate.reservationId;
+      const diagnosticCookieHeader = diagnostics.diagnosticCookieHeader || null;
+
+      writeDiagnosticEvent({
+        source: "WATCHER",
+        kind: "reservation-validation-start",
+        reservationId,
+        slot: candidate.slot,
+        diagnostics,
+        note: "Starting background reservation validation from watcher",
+      });
+
+      const validationResult = await pollExpireTimeDiagnostic({
+        session: activeReservationValidation.session,
+        slot: candidate.slot,
+        reservationId,
+        cookieHeaderOverride: diagnosticCookieHeader,
+      });
+
+      writeDiagnosticEvent({
+        source: "WATCHER",
+        kind: "reservation-validation-finished",
+        reservationId,
+        slot: candidate.slot,
+        validationResult,
+        note: "Finished background reservation validation from watcher",
+      });
+
+      if (validationResult && validationResult.firstNonNullExpireTime !== null) {
+        globalBookingSuccess = true;
+        clearFightState();
+        pendingReservationCandidates = [];
+
+        const paymentUrl = buildPaymentUrlFromReservationId(reservationId);
+
+        console.log("✅ VALIDATED RESERVATION:", reservationId, validationResult.firstNonNullExpireTime);
+        console.log("✅ VALIDATED PAYMENT URL:", paymentUrl);
+
+        await sendTelegramMessage(
+          `🔥 POTWIERDZONA REZERWACJA
+
+📅 ${candidate.slot.date}
+⏰ ${candidate.slot.time}
+
+💳 LINK:
+${paymentUrl}`
+        );
+
+        const page = getSessionPage();
+
+        if (page && !page.isClosed()) {
+          console.log("🌐 OPENING VALIDATED PAYMENT PAGE...");
+          await sleep(500);
+          await page.goto("https://info-car.pl/new/");
+          await sleep(500);
+          await page.goto(paymentUrl);
+        }
+      }
+    } catch (validationError) {
+      console.log("VALIDATION WORKER ERROR:", String(validationError?.message || validationError));
+    } finally {
+      activeReservationValidation = null;
+    }
+
+    await sleep(100);
+  }
+}
+
 
 async function runWatcher() {
   // let iteration = 0;
@@ -383,6 +519,7 @@ async function runWatcher() {
   });
   startEventLine();
   void runBookingBurstWorker(() => session);
+  void runReservationValidationWorker();
 
   while (true) {
     if (globalBookingSuccess) {
