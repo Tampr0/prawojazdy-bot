@@ -15,7 +15,7 @@ const DEBUG = false;
 
 const POLL_INTERVAL_MS = 6000;
 const BOOKING_LOOP_DELAY_MS = 400; // delay between slot booking attempts inside one burst round
-const BOOKING_BURST_INTERVAL_MS = 1000; // delay between booking rounds in background worker
+const BOOKING_BURST_INTERVAL_MS = 500; // delay between booking rounds in background worker
 const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
 const VALIDATION_QUEUE_MAX = 3; // keep only the newest few validation candidates
 const VALIDATION_CANDIDATE_MAX_AGE_MS = 12000; // drop stale queued candidates

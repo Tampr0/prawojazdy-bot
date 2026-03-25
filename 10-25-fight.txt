@@ -1,0 +1,566 @@
+SESSION READY
+STATUS. | 10:25:29 | slots: 1 | session: OK
+[2026-03-25T10:25:29] [INFO] 2026-03-28 07:20 | wordId: 3
+Wiadomosc Telegram wyslana poprawnie
+
+🔥 FIGHT MODE ARMED | slots: 1
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"f84eb08e-7211-4b5f-ada9-ef98510462b2"}
+BOOK RESPONSE: {
+  id: 'f84eb08e-7211-4b5f-ada9-ef98510462b2',
+  __diagnostics: {
+    reservationId: 'f84eb08e-7211-4b5f-ada9-ef98510462b2',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/f84eb08e-7211-4b5f-ada9-ef98510462b2'
+  }
+}
+RESERVATION CANDIDATE: {
+  storedAt: 1774430730502,
+  reservationId: 'f84eb08e-7211-4b5f-ada9-ef98510462b2',
+  slot: {
+    id: '2632509393600003085',
+    date: '2026-03-28T07:20:00',
+    time: '07:20:00',
+    wordId: '3',
+    amount: 222,
+    places: 1
+  },
+  diagnostics: {
+    reservationId: 'f84eb08e-7211-4b5f-ada9-ef98510462b2',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/f84eb08e-7211-4b5f-ada9-ef98510462b2'
+  },
+  session: {
+    bearerToken: 'eyJraWQiOiJpYy0xIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJ1aWQiOiJiNmFhZmE2Ni1kMjk5LTQ5YmYtOGY3ZS1kNDgyMWM5MTQyYmMiLCJzY3AiOlsiZW1haWwiLCJvcGVuaWQiLCJwcm9maWxlIiwicmVzb3VyY2UucmVhZCJdLCJoYXNBY2MiOnRydWUsImF6cCI6ImNsaWVudCIsImlzcyI6Imh0dHBzOlwvXC9pbmZvLWNhci5wbFwvb2F1dGgyXC8iLCJleHAiOjE3NzQ0MzQzMTgsImlhdCI6MTc3NDQzMDcxOCwianRpIjoiOTc3MDRmNTEtZWQwNi00Njc1LWI1YzMtMDgxODRiMTBiZDI0IiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.ibrU_nBll1LWn3f4MJbTpEMkWd442NoI4e5i_16dYHN6QknQB3afgd4ZMaGUwOKRNEGiiWdaaimNTeHSZkxS4WW1eLBVG8Y8ckvkJIgrkCeIwn_fwdDdCcIJj4SQDruFfOgvzydDX8MLbIMHGIjSsW0_xWu2MMOBkR9btF-fcv8',
+    cookies: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object]
+    ],
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    capturedAt: '2026-03-25T09:25:24.599Z'
+  }
+}
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:31.804582481"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:31.804582481"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:32.863886342"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:32.863886342"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:33.91446087"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:33.91446087"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:34.972111447"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:34.972111447"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"f83d5a9c-801a-4ae6-8e67-ceb354869b35"}
+BOOK RESPONSE: {
+  id: 'f83d5a9c-801a-4ae6-8e67-ceb354869b35',
+  __diagnostics: {
+    reservationId: 'f83d5a9c-801a-4ae6-8e67-ceb354869b35',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/f83d5a9c-801a-4ae6-8e67-ceb354869b35'
+  }
+}
+RESERVATION CANDIDATE: {
+  storedAt: 1774430736326,
+  reservationId: 'f83d5a9c-801a-4ae6-8e67-ceb354869b35',
+  slot: {
+    id: '2632509393600003085',
+    date: '2026-03-28T07:20:00',
+    time: '07:20:00',
+    wordId: '3',
+    amount: 222,
+    places: 1
+  },
+  diagnostics: {
+    reservationId: 'f83d5a9c-801a-4ae6-8e67-ceb354869b35',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/f83d5a9c-801a-4ae6-8e67-ceb354869b35'
+  },
+  session: {
+    bearerToken: 'eyJraWQiOiJpYy0xIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJ1aWQiOiJiNmFhZmE2Ni1kMjk5LTQ5YmYtOGY3ZS1kNDgyMWM5MTQyYmMiLCJzY3AiOlsiZW1haWwiLCJvcGVuaWQiLCJwcm9maWxlIiwicmVzb3VyY2UucmVhZCJdLCJoYXNBY2MiOnRydWUsImF6cCI6ImNsaWVudCIsImlzcyI6Imh0dHBzOlwvXC9pbmZvLWNhci5wbFwvb2F1dGgyXC8iLCJleHAiOjE3NzQ0MzQzMTgsImlhdCI6MTc3NDQzMDcxOCwianRpIjoiOTc3MDRmNTEtZWQwNi00Njc1LWI1YzMtMDgxODRiMTBiZDI0IiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.ibrU_nBll1LWn3f4MJbTpEMkWd442NoI4e5i_16dYHN6QknQB3afgd4ZMaGUwOKRNEGiiWdaaimNTeHSZkxS4WW1eLBVG8Y8ckvkJIgrkCeIwn_fwdDdCcIJj4SQDruFfOgvzydDX8MLbIMHGIjSsW0_xWu2MMOBkR9btF-fcv8',
+    cookies: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object]
+    ],
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    capturedAt: '2026-03-25T09:25:24.599Z'
+  }
+}
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:37.673055392"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:37.673055392"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+STATUS.. | 10:25:38 | slots: 1 | session: OK
+[2026-03-25T10:25:38] [INFO] 2026-03-28 07:20 | wordId: 3
+Wiadomosc Telegram wyslana poprawnie
+
+🔥 FIGHT MODE ARMED | slots: 1
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:38.794832961"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:38.794832961"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:39.854750043"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:39.854750043"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"28f49f2f-3325-4b81-925a-3f76c530e3d3"}
+BOOK RESPONSE: {
+  id: '28f49f2f-3325-4b81-925a-3f76c530e3d3',
+  __diagnostics: {
+    reservationId: '28f49f2f-3325-4b81-925a-3f76c530e3d3',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/28f49f2f-3325-4b81-925a-3f76c530e3d3'
+  }
+}
+RESERVATION CANDIDATE: {
+  storedAt: 1774430741221,
+  reservationId: '28f49f2f-3325-4b81-925a-3f76c530e3d3',
+  slot: {
+    id: '2632509393600003085',
+    date: '2026-03-28T07:20:00',
+    time: '07:20:00',
+    wordId: '3',
+    amount: 222,
+    places: 1
+  },
+  diagnostics: {
+    reservationId: '28f49f2f-3325-4b81-925a-3f76c530e3d3',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/28f49f2f-3325-4b81-925a-3f76c530e3d3'
+  },
+  session: {
+    bearerToken: 'eyJraWQiOiJpYy0xIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJ1aWQiOiJiNmFhZmE2Ni1kMjk5LTQ5YmYtOGY3ZS1kNDgyMWM5MTQyYmMiLCJzY3AiOlsiZW1haWwiLCJvcGVuaWQiLCJwcm9maWxlIiwicmVzb3VyY2UucmVhZCJdLCJoYXNBY2MiOnRydWUsImF6cCI6ImNsaWVudCIsImlzcyI6Imh0dHBzOlwvXC9pbmZvLWNhci5wbFwvb2F1dGgyXC8iLCJleHAiOjE3NzQ0MzQzMTgsImlhdCI6MTc3NDQzMDcxOCwianRpIjoiOTc3MDRmNTEtZWQwNi00Njc1LWI1YzMtMDgxODRiMTBiZDI0IiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.ibrU_nBll1LWn3f4MJbTpEMkWd442NoI4e5i_16dYHN6QknQB3afgd4ZMaGUwOKRNEGiiWdaaimNTeHSZkxS4WW1eLBVG8Y8ckvkJIgrkCeIwn_fwdDdCcIJj4SQDruFfOgvzydDX8MLbIMHGIjSsW0_xWu2MMOBkR9btF-fcv8',
+    cookies: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object]
+    ],
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    capturedAt: '2026-03-25T09:25:24.599Z'
+  }
+}
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:42.533658879"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:42.533658879"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:43.582114661"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:43.582114661"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:44.645036451"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:44.645036451"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"50a87436-ad9e-4fa0-9553-4374ebff11ea"}
+BOOK RESPONSE: {
+  id: '50a87436-ad9e-4fa0-9553-4374ebff11ea',
+  __diagnostics: {
+    reservationId: '50a87436-ad9e-4fa0-9553-4374ebff11ea',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/50a87436-ad9e-4fa0-9553-4374ebff11ea'
+  }
+}
+RESERVATION CANDIDATE: {
+  storedAt: 1774430746034,
+  reservationId: '50a87436-ad9e-4fa0-9553-4374ebff11ea',
+  slot: {
+    id: '2632509393600003085',
+    date: '2026-03-28T07:20:00',
+    time: '07:20:00',
+    wordId: '3',
+    amount: 222,
+    places: 1
+  },
+  diagnostics: {
+    reservationId: '50a87436-ad9e-4fa0-9553-4374ebff11ea',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/50a87436-ad9e-4fa0-9553-4374ebff11ea'
+  },
+  session: {
+    bearerToken: 'eyJraWQiOiJpYy0xIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJ1aWQiOiJiNmFhZmE2Ni1kMjk5LTQ5YmYtOGY3ZS1kNDgyMWM5MTQyYmMiLCJzY3AiOlsiZW1haWwiLCJvcGVuaWQiLCJwcm9maWxlIiwicmVzb3VyY2UucmVhZCJdLCJoYXNBY2MiOnRydWUsImF6cCI6ImNsaWVudCIsImlzcyI6Imh0dHBzOlwvXC9pbmZvLWNhci5wbFwvb2F1dGgyXC8iLCJleHAiOjE3NzQ0MzQzMTgsImlhdCI6MTc3NDQzMDcxOCwianRpIjoiOTc3MDRmNTEtZWQwNi00Njc1LWI1YzMtMDgxODRiMTBiZDI0IiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.ibrU_nBll1LWn3f4MJbTpEMkWd442NoI4e5i_16dYHN6QknQB3afgd4ZMaGUwOKRNEGiiWdaaimNTeHSZkxS4WW1eLBVG8Y8ckvkJIgrkCeIwn_fwdDdCcIJj4SQDruFfOgvzydDX8MLbIMHGIjSsW0_xWu2MMOBkR9btF-fcv8',
+    cookies: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object]
+    ],
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    capturedAt: '2026-03-25T09:25:24.599Z'
+  }
+}
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:47.349714924"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:47.349714924"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:48.40234268"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:48.40234268"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:49.463009186"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:49.463009186"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:50.523064447"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:50.523064447"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+STATUS... | 10:25:50 | slots: 1 | session: OK
+[2026-03-25T10:25:50] [INFO] 2026-03-28 07:20 | wordId: 3
+Wiadomosc Telegram wyslana poprawnie
+
+🔥 FIGHT MODE ARMED | slots: 1
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"49ac004f-1d16-4c1c-8fbd-f10ec2492b99"}
+BOOK RESPONSE: {
+  id: '49ac004f-1d16-4c1c-8fbd-f10ec2492b99',
+  __diagnostics: {
+    reservationId: '49ac004f-1d16-4c1c-8fbd-f10ec2492b99',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/49ac004f-1d16-4c1c-8fbd-f10ec2492b99'
+  }
+}
+RESERVATION CANDIDATE: {
+  storedAt: 1774430751867,
+  reservationId: '49ac004f-1d16-4c1c-8fbd-f10ec2492b99',
+  slot: {
+    id: '2632509393600003085',
+    date: '2026-03-28T07:20:00',
+    time: '07:20:00',
+    wordId: '3',
+    amount: 222,
+    places: 1
+  },
+  diagnostics: {
+    reservationId: '49ac004f-1d16-4c1c-8fbd-f10ec2492b99',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/49ac004f-1d16-4c1c-8fbd-f10ec2492b99'
+  },
+  session: {
+    bearerToken: 'eyJraWQiOiJpYy0xIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJ1aWQiOiJiNmFhZmE2Ni1kMjk5LTQ5YmYtOGY3ZS1kNDgyMWM5MTQyYmMiLCJzY3AiOlsiZW1haWwiLCJvcGVuaWQiLCJwcm9maWxlIiwicmVzb3VyY2UucmVhZCJdLCJoYXNBY2MiOnRydWUsImF6cCI6ImNsaWVudCIsImlzcyI6Imh0dHBzOlwvXC9pbmZvLWNhci5wbFwvb2F1dGgyXC8iLCJleHAiOjE3NzQ0MzQzMTgsImlhdCI6MTc3NDQzMDcxOCwianRpIjoiOTc3MDRmNTEtZWQwNi00Njc1LWI1YzMtMDgxODRiMTBiZDI0IiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.ibrU_nBll1LWn3f4MJbTpEMkWd442NoI4e5i_16dYHN6QknQB3afgd4ZMaGUwOKRNEGiiWdaaimNTeHSZkxS4WW1eLBVG8Y8ckvkJIgrkCeIwn_fwdDdCcIJj4SQDruFfOgvzydDX8MLbIMHGIjSsW0_xWu2MMOBkR9btF-fcv8',
+    cookies: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object]
+    ],
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    capturedAt: '2026-03-25T09:25:24.599Z'
+  }
+}
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:53.178246373"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:53.178246373"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:54.227798659"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:54.227798659"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:55.273108959"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:55.273108959"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:56.331017062"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:56.331017062"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 201
+BOOK BODY: {"id":"725fdbf3-660e-4b0c-8789-029f8f4cdd48"}
+BOOK RESPONSE: {
+  id: '725fdbf3-660e-4b0c-8789-029f8f4cdd48',
+  __diagnostics: {
+    reservationId: '725fdbf3-660e-4b0c-8789-029f8f4cdd48',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/725fdbf3-660e-4b0c-8789-029f8f4cdd48'
+  }
+}
+RESERVATION CANDIDATE: {
+  storedAt: 1774430757663,
+  reservationId: '725fdbf3-660e-4b0c-8789-029f8f4cdd48',
+  slot: {
+    id: '2632509393600003085',
+    date: '2026-03-28T07:20:00',
+    time: '07:20:00',
+    wordId: '3',
+    amount: 222,
+    places: 1
+  },
+  diagnostics: {
+    reservationId: '725fdbf3-660e-4b0c-8789-029f8f4cdd48',
+    diagnosticCookieHeader: 'wordHolidays=["2026-01-01","2026-01-06","2026-04-05","2026-04-06","2026-05-01","2026-05-03","2026-05-24","2026-06-04","2026-08-15","2026-11-01","2026-11-11","2026-12-25","2026-12-26","2027-01-01","2027-01-06","2027-03-28","2027-03-29","2027-05-01","2027-05-03","2027-05-16","2027-05-27","2027-08-15","2027-11-01","2027-11-11","2027-12-25","2027-12-26"]; SESSION=; TS014498b9=016ccbb8ca0143e16b3071ad96bf8d9bb4fb9d136fd0d3d8a20d9af6de5c26c52944a7c8457c613b031db8fccd6010aee70d07ae3ec6e16df313c52f1a7ba09f3b905eb2c2; device-cookie=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJqdGkiOiJhMWI0OTNlMi1iNDZjLTRmMDQtYmI0Yy0wMmFiYmFmODQ1N2MifQ.MFqRTxdL9OCM4WLGU0oYPTc6pAOmA-VVdfBvl3HIJqk; TS0113be7a=016ccbb8ca8e587ed49ecd0b9e976bbd797cac5049d0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44ebe58d422fdff664b131983c8dc1993225b4c1cb3ff91dd5467e662fe80943076d; _gid=GA1.2.360193281.1774208011; CookieScriptConsent={"googleconsentmap":{"ad_storage":"targeting","analytics_storage":"performance","ad_user_data":"targeting","ad_personalization":"targeting","functionality_storage":"functionality","personalization_storage":"functionality","security_storage":"functionality"},"bannershown":1,"action":"accept","consenttime":1718269355,"categories":"[\\"performance\\",\\"targeting\\",\\"functionality\\"]","key":"1aa3f6b5-1ecb-49e7-87cc-194f85769679"}; _gat_UA-37414364-1=1; TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f; _ga=GA1.2.1285771763.1774208009; _ga_XZ58VKZBEN=GS2.1.s1774423295$o47$g1$t1774430723$j51$l0$h0; _ga_BMFEL48YGZ=GS2.1.s1774423295$o46$g1$t1774430724$j43$l0$h0',
+    setCookiePairs: [
+      'SESSION=',
+      'SESSION=',
+      'TS01f5bb17=016ccbb8caa95eaeb31045b652e0c528ca670fa06dd0d3d8a20d9af6de5c26c52944a7c845573b48a10eaed45f01cc768fbc4b44eb9978cff8f8ee06374738e46c93be3e5f'
+    ],
+    locationHeader: 'http://info-car.pl/api/word/reservations/725fdbf3-660e-4b0c-8789-029f8f4cdd48'
+  },
+  session: {
+    bearerToken: 'eyJraWQiOiJpYy0xIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJrb25yYWQuc3VzemN6eW5za2kwMEBnbWFpbC5jb20iLCJ1aWQiOiJiNmFhZmE2Ni1kMjk5LTQ5YmYtOGY3ZS1kNDgyMWM5MTQyYmMiLCJzY3AiOlsiZW1haWwiLCJvcGVuaWQiLCJwcm9maWxlIiwicmVzb3VyY2UucmVhZCJdLCJoYXNBY2MiOnRydWUsImF6cCI6ImNsaWVudCIsImlzcyI6Imh0dHBzOlwvXC9pbmZvLWNhci5wbFwvb2F1dGgyXC8iLCJleHAiOjE3NzQ0MzQzMTgsImlhdCI6MTc3NDQzMDcxOCwianRpIjoiOTc3MDRmNTEtZWQwNi00Njc1LWI1YzMtMDgxODRiMTBiZDI0IiwiYXV0aG9yaXRpZXMiOlsiUk9MRV9VU0VSIl19.ibrU_nBll1LWn3f4MJbTpEMkWd442NoI4e5i_16dYHN6QknQB3afgd4ZMaGUwOKRNEGiiWdaaimNTeHSZkxS4WW1eLBVG8Y8ckvkJIgrkCeIwn_fwdDdCcIJj4SQDruFfOgvzydDX8MLbIMHGIjSsW0_xWu2MMOBkR9btF-fcv8',
+    cookies: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object]
+    ],
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    capturedAt: '2026-03-25T09:25:24.599Z'
+  }
+}
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:59.007090886"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:25:59.007090886"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:00.062183027"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:00.062183027"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:01.109347921"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:01.109347921"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:02.172154643"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:02.172154643"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:03.233751974"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:03.233751974"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+
+🔥 BURST ROUND START | slots: 1 | slotDelayMs: 400 | burstIntervalMs: 1000
+TRY API BOOKING: 2632509393600003085 2026-03-28T07:20:00 07:20:00
+BOOK STATUS: 422
+BOOK BODY: {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:04.301723959"}]}
+BOOK ERROR: BOOKING_API_ERROR: 422 {"errors":[{"code":"reservation.another-started","userMessage":"Inna rezerwacja jest już aktywna dla PKK","timestamp":"2026-03-25T10:26:04.301723959"}]}
+ℹ️ 422 another-started - keeping burst alive, no success assumption
+
+🔥 BURST ROUND END
+STATUS | 10:26:04 | slots: 0 | session: OK
+🧹 FIGHT MODE CLEARED | no slots in current fetch
+[COMBAT SUMMARY] reason=no-slots-in-fetch durationMs=34473 armed=1 cleared=1 burstRounds=30 reservationAttempts=30 candidates201=6 reservation422=24 validationStarts=4 validationSuccesses=0 validationNullFinishes=3 bookingWorkerErrors=0 validationWorkerErrors=0
+STATUS... | 10:27:52 | slots: 0 | session: OK

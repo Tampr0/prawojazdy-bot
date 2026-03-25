@@ -603,3 +603,16 @@
 {"type":"APPEARED","source":"FULL","slotKey":"2026-05-14T15:00:00_15:00:00_3_PRACTICAL","date":"2026-03-25","time":"10:04:48","ts":"2026-03-25T09:04:48.730Z"}
 {"type":"APPEARED","source":"FULL","slotKey":"2026-05-18T11:20:00_11:20:00_3_PRACTICAL","date":"2026-03-25","time":"10:04:48","ts":"2026-03-25T09:04:48.733Z"}
 {"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-14T15:00:00_15:00:00_3_PRACTICAL","date":"2026-03-25","time":"10:10:48","ts":"2026-03-25T09:10:48.189Z","lifetimeSec":359}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-03-28T07:20:00_07:20:00_3_PRACTICAL","date":"2026-03-25","time":"10:25:30","ts":"2026-03-25T09:25:30.003Z"}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-15T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"10:25:30","ts":"2026-03-25T09:25:30.005Z"}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-03-28T07:20:00_07:20:00_3_PRACTICAL","date":"2026-03-25","time":"10:26:04","ts":"2026-03-25T09:26:04.607Z","lifetimeSec":35}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-15T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"10:37:17","ts":"2026-03-25T09:37:17.206Z","lifetimeSec":707}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-15T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"10:45:20","ts":"2026-03-25T09:45:20.219Z"}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-15T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"10:59:49","ts":"2026-03-25T09:59:49.235Z","lifetimeSec":869}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-18T11:20:00_11:20:00_3_PRACTICAL","date":"2026-03-25","time":"11:11:34","ts":"2026-03-25T10:11:34.510Z","lifetimeSec":4006}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-25T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"11:19:00","ts":"2026-03-25T10:19:00.858Z","lifetimeSec":319435}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-11T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"11:25:20","ts":"2026-03-25T10:25:20.840Z"}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-11T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"11:34:23","ts":"2026-03-25T10:34:23.097Z","lifetimeSec":542}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-18T11:20:00_11:20:00_3_PRACTICAL","date":"2026-03-25","time":"11:35:17","ts":"2026-03-25T10:35:17.242Z"}
+{"type":"APPEARED","source":"FULL","slotKey":"2026-05-25T08:50:00_08:50:00_3_PRACTICAL","date":"2026-03-25","time":"11:35:17","ts":"2026-03-25T10:35:17.244Z"}
+{"type":"DISAPPEARED","source":"FULL","slotKey":"2026-05-19T10:30:00_10:30:00_3_PRACTICAL","date":"2026-03-25","time":"11:36:17","ts":"2026-03-25T10:36:17.489Z","lifetimeSec":320472}
