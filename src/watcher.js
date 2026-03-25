@@ -31,6 +31,7 @@ let burstWorkerStarted = false;
 let fightModeActive = false;
 let fightSlotsSnapshot = [];
 let fightModeLastSeenAt = 0;
+let lastReservationCandidate = null;
 
 function getNextInterval() {
   return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000);
@@ -206,6 +207,31 @@ function getFightSlotsSnapshot() {
   return fightSlotsSnapshot.map(cloneFightSlot);
 }
 
+function storeReservationCandidate(slot, result) {
+  const reservationId =
+    result?.__diagnostics?.reservationId ||
+    result?.id ||
+    null;
+
+  lastReservationCandidate = {
+    storedAt: Date.now(),
+    reservationId,
+    slot: slot
+      ? {
+          id: slot.id,
+          date: slot.date,
+          time: slot.time,
+          wordId: slot.wordId,
+          amount: slot.amount ?? null,
+          places: slot.places ?? null,
+        }
+      : null,
+    diagnostics: result?.__diagnostics || null,
+  };
+
+  return lastReservationCandidate;
+}
+
 function isFightModeStale() {
   if (!fightModeActive || fightModeLastSeenAt <= 0) {
     return false;
@@ -280,43 +306,42 @@ async function runBookingBurstWorker(getSession) {
 
           console.log("BOOK RESPONSE:", result);
 
-          const paymentUrl = `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${result.id}/platnosc`;
+          const candidate = storeReservationCandidate(slot, result);
 
-          console.log("PAYMENT URL:", paymentUrl);
-          let page = getSessionPage();
+          console.log("RESERVATION CANDIDATE:", candidate);
 
-          if (page && !page.isClosed()) {
-            console.log("🌐 OPENING PAYMENT PAGE...");
-            await sleep(500);
-            await page.goto("https://info-car.pl/new/");
-            await sleep(500);
-            await page.goto(paymentUrl);
-          }
-
-          if (result && result.id && isFirstBurstRound) {
-            await sendTelegramMessage(
-              `🔥 PRÓBA REZERWACJI
-
-                      📅 ${slot.date}
-                      ⏰ ${slot.time}
-
-                      💳 LINK:
-                      ${paymentUrl}`
-            );
-          }
+          writeDiagnosticEvent({
+            source: "WATCHER",
+            kind: "reservation-candidate",
+            reservationId: candidate.reservationId,
+            slot: candidate.slot,
+            diagnostics: candidate.diagnostics,
+            note: "Reservation POST returned candidate result; waiting for later validation",
+          });
         } catch (apiError) {
           const msg = String(apiError?.message || apiError);
 
           console.log("BOOK ERROR:", msg);
 
           if (msg.includes("422")) {
-            console.log("🔥 POSSIBLE SUCCESS (422) - STOP LOOP");
+            console.log("ℹ️ 422 another-started - keeping burst alive, no success assumption");
 
-            await sendTelegramMessage("🔥 422 - PRAWDOPODOBNIE MAMY REZERWACJĘ");
+            writeDiagnosticEvent({
+              source: "WATCHER",
+              kind: "reservation-422",
+              slot: {
+                id: slot.id,
+                date: slot.date,
+                time: slot.time,
+                wordId: slot.wordId,
+                amount: slot.amount ?? null,
+                places: slot.places ?? null,
+              },
+              errorMessage: msg,
+              note: "Reservation returned 422; treated as non-success candidate failure",
+            });
 
-            globalBookingSuccess = true;
-            clearFightState();
-            break;
+            continue;
           }
         }
 
