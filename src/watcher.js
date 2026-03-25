@@ -13,9 +13,9 @@ const { writeDiagnosticEvent } = require("./bookingDiagnostics");
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
-const POLL_INTERVAL_MS = 7000;
-const BOOKING_LOOP_DELAY_MS = 1500; // 1.5s między próbami
-const BOOKING_MAX_ROUNDS = 50; // ile razy przejechać po liście
+const POLL_INTERVAL_MS = 8000;
+const BOOKING_LOOP_DELAY_MS = 1500; // keep current timing in step 1
+const BOOKING_BURST_INTERVAL_MS = 1000; // delay between booking rounds in background worker
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
 const RANGE_DAYS = 60;
 const MAX_LOGGED_TERMS = 10;
@@ -25,6 +25,11 @@ let globalBookingSuccess = false;
 let postSuccessCheckDone = false; // do testów czy termin jest widoczny dalej po zarezerwowaniu
 let bookingInProgress = false;
 let statusDots = "";
+
+let burstWorkerStarted = false;
+let fightModeActive = false;
+let fightSlotsSnapshot = [];
+let fightModeLastSeenAt = 0;
 
 function getNextInterval() {
   return POLL_INTERVAL_MS + Math.floor(Math.random() * 3000);
@@ -171,6 +176,149 @@ function startEventLine() {
   console.log("");
 }
 
+function cloneFightSlot(slot) {
+  return {
+    id: slot.id,
+    date: slot.date,
+    time: slot.time,
+    wordId: slot.wordId,
+    examType: slot.examType,
+    places: slot.places ?? null,
+    amount: slot.amount ?? null,
+    additionalInfo: slot.additionalInfo ?? null,
+  };
+}
+
+function updateFightState(slots) {
+  fightSlotsSnapshot = Array.isArray(slots) ? slots.filter(Boolean).map(cloneFightSlot) : [];
+  fightModeActive = fightSlotsSnapshot.length > 0;
+  fightModeLastSeenAt = Date.now();
+}
+
+function clearFightState() {
+  fightSlotsSnapshot = [];
+  fightModeActive = false;
+  fightModeLastSeenAt = 0;
+}
+
+function getFightSlotsSnapshot() {
+  return fightSlotsSnapshot.map(cloneFightSlot);
+}
+
+async function runBookingBurstWorker(getSession) {
+  if (burstWorkerStarted) {
+    return;
+  }
+
+  burstWorkerStarted = true;
+  console.log("⚙️ BOOKING BURST WORKER STARTED");
+
+  while (true) {
+    try {
+      if (globalBookingSuccess) {
+        await sleep(1000);
+        continue;
+      }
+
+      const session = getSession();
+
+      if (!session || !fightModeActive || bookingInProgress) {
+        await sleep(250);
+        continue;
+      }
+
+      const slots = getFightSlotsSnapshot();
+
+      if (slots.length === 0) {
+        await sleep(250);
+        continue;
+      }
+
+      bookingInProgress = true;
+      startEventLine();
+      console.log(`🔥 BURST ROUND START | slots: ${slots.length}`);
+
+      for (const slot of slots) {
+        if (!slot || !slot.id || globalBookingSuccess) {
+          continue;
+        }
+
+        try {
+          console.log("TRY API BOOKING:", slot.id, slot.date, slot.time);
+
+          writeDiagnosticEvent({
+            source: "WATCHER",
+            kind: "api-booking-attempt",
+            slot: {
+              id: slot.id,
+              date: slot.date,
+              time: slot.time,
+              wordId: slot.wordId,
+              amount: slot.amount ?? null,
+              places: slot.places ?? null,
+            },
+            note: "Starting API booking attempt from watcher burst worker",
+          });
+
+          const result = await bookSlotAPI(session, slot);
+
+          console.log("BOOK RESPONSE:", result);
+
+          const paymentUrl = `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${result.id}/platnosc`;
+
+          console.log("PAYMENT URL:", paymentUrl);
+          let page = getSessionPage();
+
+          if (page && !page.isClosed()) {
+            console.log("🌐 OPENING PAYMENT PAGE...");
+            await sleep(500);
+            await page.goto("https://info-car.pl/new/");
+            await sleep(500);
+            await page.goto(paymentUrl);
+          }
+
+          if (result && result.id) {
+            await sendTelegramMessage(
+              `🔥 PRÓBA REZERWACJI
+
+                      📅 ${slot.date}
+                      ⏰ ${slot.time}
+
+                      💳 LINK:
+                      ${paymentUrl}`
+            );
+          }
+        } catch (apiError) {
+          const msg = String(apiError?.message || apiError);
+
+          console.log("BOOK ERROR:", msg);
+
+          if (msg.includes("422")) {
+            console.log("🔥 POSSIBLE SUCCESS (422) - STOP LOOP");
+
+            await sendTelegramMessage("🔥 422 - PRAWDOPODOBNIE MAMY REZERWACJĘ");
+
+            globalBookingSuccess = true;
+            clearFightState();
+            break;
+          }
+        }
+
+        await sleep(BOOKING_LOOP_DELAY_MS);
+      }
+
+      startEventLine();
+      console.log("🔥 BURST ROUND END");
+    } catch (workerError) {
+      console.log("BURST WORKER ERROR:", String(workerError?.message || workerError));
+    } finally {
+      bookingInProgress = false;
+    }
+
+    await sleep(BOOKING_BURST_INTERVAL_MS);
+  }
+}
+
 
 async function runWatcher() {
   // let iteration = 0;
@@ -193,6 +341,7 @@ async function runWatcher() {
     retryDelays: [5000, 3000, 4000, 8000, 10000],
   });
   startEventLine();
+  void runBookingBurstWorker(() => session);
 
   while (true) {
     if (globalBookingSuccess) {
@@ -251,6 +400,7 @@ async function runWatcher() {
 
       if (practicalTerms.length !== 0) {
         if (filteredByRange.length === 0) {
+          clearFightState();
           await saveJson(config.debugSlotsFilePath, practicalTerms);
           await sleep(getNextInterval());
           continue;
@@ -278,90 +428,10 @@ async function runWatcher() {
 
           // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
+          updateFightState(newSlots);
+
           startEventLine();
-          console.log("🔥 ALL-IN BOOKING START");
-
-          let bookingSuccess = false;
-
-          for (let round = 0; round < BOOKING_MAX_ROUNDS; round++) {
-            console.log(`BOOKING ROUND: ${round + 1}/${BOOKING_MAX_ROUNDS}`);
-
-            for (const slot of newSlots) {
-              if (!slot || !slot.id) continue;
-
-              try {
-                console.log("TRY API BOOKING:", slot.id, slot.date, slot.time);
-
-                writeDiagnosticEvent({
-                  source: "WATCHER",
-                  kind: "api-booking-attempt",
-                  slot: {
-                    id: slot.id,
-                    date: slot.date,
-                    time: slot.time,
-                    wordId: slot.wordId,
-                    amount: slot.amount ?? null,
-                    places: slot.places ?? null,
-                  },
-                  note: "Starting API booking attempt from watcher",
-                });
-
-                const result = await bookSlotAPI(session, slot);
-
-                console.log("BOOK RESPONSE:", result);
-
-                const paymentUrl = `https://info-car.pl/new/prawo-jazdy/zapisz-sie-na-egzamin-na-prawo-jazdy/${result.id}/platnosc`;
-
-                console.log("PAYMENT URL:", paymentUrl);
-                let page = getSessionPage();
-
-                if (page && !page.isClosed()) {
-                  console.log("🌐 OPENING PAYMENT PAGE...");
-                  await sleep(500);
-                  await page.goto("https://info-car.pl/new/");
-                  await sleep(500);
-                  await page.goto(paymentUrl);
-                }
-
-                // 🔴 TU NIE UFAMY 201
-                if (result && result.id && round === 0) {
-                  await sendTelegramMessage(
-                    `🔥 PRÓBA REZERWACJI
-
-                      📅 ${slot.date}
-                      ⏰ ${slot.time}
-
-                      💳 LINK:
-                      ${paymentUrl}`
-                  );
-                }
-
-              } catch (apiError) {
-                const msg = String(apiError?.message || apiError);
-
-                console.log("BOOK ERROR:", msg);
-
-                // 🔥 TU traktujemy 422 jako potencjalny sukces
-                if (msg.includes("422")) {
-                  console.log("🔥 POSSIBLE SUCCESS (422) - STOP LOOP");
-
-                  await sendTelegramMessage("🔥 422 - PRAWDOPODOBNIE MAMY REZERWACJĘ");
-
-                  bookingSuccess = true;
-                  globalBookingSuccess = true;
-                  break;
-                }
-
-                // inne błędy → lecimy dalej
-              }
-
-              await sleep(BOOKING_LOOP_DELAY_MS);
-            }
-
-            if (bookingSuccess) break;
-          }
-
-          console.log("🔥 ALL-IN BOOKING END");
+          console.log(`🔥 FIGHT MODE ARMED | slots: ${newSlots.length}`);
         }
       }
 
@@ -407,7 +477,7 @@ async function runWatcher() {
       logError("Blad podczas pobierania terminarza.", error);
     }
 
-    await sleep(POLL_INTERVAL_MS);
+    await sleep(getNextInterval());
 
   }
   // console.log("TEST DONE - exiting"); // odznaczyć jeśli chcemy aby iterował ilość odpaleń
