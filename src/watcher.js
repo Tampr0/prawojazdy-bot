@@ -14,7 +14,7 @@ const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
 
 const POLL_INTERVAL_MS = 8000;
-const BOOKING_LOOP_DELAY_MS = 1500; // keep current timing in step 1
+const BOOKING_LOOP_DELAY_MS = 400; // delay between slot booking attempts inside one burst round
 const BOOKING_BURST_INTERVAL_MS = 1000; // delay between booking rounds in background worker
 const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
@@ -251,7 +251,7 @@ async function runBookingBurstWorker(getSession) {
 
       bookingInProgress = true;
       startEventLine();
-      console.log(`🔥 BURST ROUND START | slots: ${slots.length}`);
+      console.log(`🔥 BURST ROUND START | slots: ${slots.length} | slotDelayMs: ${BOOKING_LOOP_DELAY_MS} | burstIntervalMs: ${BOOKING_BURST_INTERVAL_MS}`);
       const isFirstBurstRound = fightModeLastSeenAt > 0 && Date.now() - fightModeLastSeenAt < BOOKING_BURST_INTERVAL_MS + 250;
 
       for (const slot of slots) {
