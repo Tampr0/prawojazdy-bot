@@ -170,3 +170,61 @@ Call log:
 [2026-03-25T12:16:13] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
 [2026-03-25T13:05:42] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
 [2026-03-25T13:57:10] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T15:22:08] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T15:35:31] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T16:36:52] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T16:42:06] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T17:26:15] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T17:36:45] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T19:43:32] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T20:44:59] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T21:46:29] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T22:38:39] [ERROR] Blad podczas pobierania terminarza.
+[2026-03-25T22:38:39] [ERROR] browserType.launchPersistentContext: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --no-sandbox --start-maximized --disable-blink-features=AutomationControlled --window-position=1920,0 --user-data-dir=C:\Users\kondo\Desktop\prawojazdy-bot\user-data --remote-debugging-pipe about:blank
+<launched> pid=11536
+Call log:
+[2m  - <launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --no-sandbox --start-maximized --disable-blink-features=AutomationControlled --window-position=1920,0 --user-data-dir=C:\Users\kondo\Desktop\prawojazdy-bot\user-data --remote-debugging-pipe about:blank[22m
+[2m  - <launched> pid=11536[22m
+[2m  - [pid=11536] <gracefully close start>[22m
+[2m  - [pid=11536] <kill>[22m
+[2m  - [pid=11536] <will force kill>[22m
+[2m  - [pid=11536] taskkill stderr: ERROR: The process "11536" not found.[22m
+[2m  - [pid=11536] <process did exit: exitCode=0, signal=null>[22m
+[2m  - [pid=11536] starting temporary directories cleanup[22m
+[2m  - [pid=11536] finished temporary directories cleanup[22m
+[2m  - [pid=11536] <gracefully close end>[22m
+
+    at async ensureSharedPage (C:\Users\kondo\Desktop\prawojazdy-bot\src\session.js:201:19)
+    at async ensureSession (C:\Users\kondo\Desktop\prawojazdy-bot\src\session.js:594:16)
+    at async runWatcher (C:\Users\kondo\Desktop\prawojazdy-bot\src\watcher.js:854:19)
+
+[2026-03-25T22:45:58] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T23:00:55] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-25T23:30:27] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T00:28:59] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T00:34:15] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T01:09:41] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T01:39:12] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T01:44:26] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T01:49:42] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T06:31:06] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T06:36:38] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T07:03:01] [ERROR] Blad sieci podczas pobierania terminarza.
+[2026-03-26T07:03:01] [ERROR] TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at async fetchSchedule (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:92:20)
+    at async fetchWithRetry (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:143:22)
+    at async runWatcher (C:\Users\kondo\Desktop\prawojazdy-bot\src\watcher.js:860:28)
+
+[2026-03-26T07:14:19] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T08:15:52] [ERROR] SESSION EXPIRED DETECTED -> HARD RESET
+[2026-03-26T10:08:03] [ERROR] Blad sieci podczas pobierania terminarza.
+[2026-03-26T10:08:03] [ERROR] TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at async fetchSchedule (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:92:20)
+    at async fetchWithRetry (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:143:22)
+    at async runWatcher (C:\Users\kondo\Desktop\prawojazdy-bot\src\watcher.js:860:28)
+

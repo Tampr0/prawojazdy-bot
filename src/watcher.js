@@ -9,7 +9,7 @@ const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 const activityTracker = require("./activityTracker");
 const { writeDiagnosticEvent } = require("./bookingDiagnostics");
-const { createFetchStatsSession } = require("./fetchStats");
+const { createFetchStatsSession, getLiveStats } = require("./fetchStats");
 
 const FORCE_BOOKING = false; // true dla testow
 const DEBUG = false;
@@ -183,6 +183,23 @@ function getDots() {
   return statusDots;
 }
 
+function formatFetchStatsForStatus() {
+  const liveStats = getLiveStats();
+  const raw = liveStats?.raw || {};
+  const derived = liveStats?.derived || {};
+
+  return [
+    `ALL:${Number(raw.allAttempts || 0)}`,
+    `noWAF:${Number(derived.noWafPercent || 0).toFixed(1)}%`,
+    `R1:${Math.round(Number(derived.retry1PercentOfWaf || 0))}%(${Number(raw.retry1Count || 0)})`,
+    `R2:${Math.round(Number(derived.retry2PercentOfWaf || 0))}%(${Number(raw.retry2Count || 0)})`,
+    `R3:${Math.round(Number(derived.retry3PercentOfWaf || 0))}%(${Number(raw.retry3Count || 0)})`,
+    `R4:${Math.round(Number(derived.retry4PercentOfWaf || 0))}%(${Number(raw.retry4Count || 0)})`,
+    `FAIL:${Math.round(Number(derived.failedPercentOfWaf || 0))}%(${Number(raw.fetchFailedCount || 0)})`,
+    `avg:${Number(derived.avgSuccessIntervalSec || 0).toFixed(1)}s`,
+  ].join(" | ");
+}
+
 function startEventLine() {
   console.log("");
 }
@@ -225,12 +242,12 @@ function logCombatSummary(reason) {
 
   console.log(
     `[COMBAT SUMMARY] reason=${reason} durationMs=${durationMs} ` +
-      `armed=${combatStats.fightArmedCount} cleared=${combatStats.fightClearedCount} ` +
-      `burstRounds=${combatStats.burstRounds} reservationAttempts=${combatStats.reservationAttempts} ` +
-      `candidates201=${combatStats.reservationCandidates201} reservation422=${combatStats.reservation422} ` +
-      `validationStarts=${combatStats.validationStarts} validationSuccesses=${combatStats.validationSuccesses} ` +
-      `validationNullFinishes=${combatStats.validationNullFinishes} ` +
-      `bookingWorkerErrors=${combatStats.bookingWorkerErrors} validationWorkerErrors=${combatStats.validationWorkerErrors}`
+    `armed=${combatStats.fightArmedCount} cleared=${combatStats.fightClearedCount} ` +
+    `burstRounds=${combatStats.burstRounds} reservationAttempts=${combatStats.reservationAttempts} ` +
+    `candidates201=${combatStats.reservationCandidates201} reservation422=${combatStats.reservation422} ` +
+    `validationStarts=${combatStats.validationStarts} validationSuccesses=${combatStats.validationSuccesses} ` +
+    `validationNullFinishes=${combatStats.validationNullFinishes} ` +
+    `bookingWorkerErrors=${combatStats.bookingWorkerErrors} validationWorkerErrors=${combatStats.validationWorkerErrors}`
   );
 }
 
@@ -817,6 +834,7 @@ async function runWatcher() {
   logInfo(`Watcher uruchomiony. Interwal: ${fetchTimingConfig.pollIntervalMs / 1000}s`);
   logFetchHeader({
     pollInterval: fetchTimingConfig.pollIntervalMs,
+    pollJitterMaxMs: fetchTimingConfig.pollJitterMaxMs,
     retryDelays: fetchTimingConfig.fetchRetryDelaysMs,
   });
   startEventLine();
@@ -837,6 +855,8 @@ async function runWatcher() {
         session = await ensureSession(config);
         startEventLine();
         console.log("SESSION READY");
+        console.log(`WARMUP WAIT -> first fetch in ${fetchTimingConfig.pollIntervalMs}ms`);
+        await sleep(fetchTimingConfig.pollIntervalMs);
       }
 
       const payload = buildPayload();
@@ -875,7 +895,7 @@ async function runWatcher() {
         minute: "2-digit",
         second: "2-digit",
       });
-      const status = `STATUS${getDots()} | ${statusTime} | slots: ${filteredByRange.length} | session: ${session ? "OK" : "NO"}`;
+      const status = `STATUS${getDots()} | ${statusTime} | slots: ${filteredByRange.length} | session: ${session ? "OK" : "NO"} | ${formatFetchStatsForStatus()}`;
       logStatus(status);
 
       if (filteredByRange.length === 0) {
