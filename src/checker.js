@@ -158,15 +158,18 @@ async function fetchWithRetry(fn, retries = getFetchTimingConfig().fetchRetryDel
       attempt++;
 
       const duration = Date.now() - attemptStart;
+      const errorMessage = String(err?.message || err).replace(/[\r\n]+/g, " ");
       const hasRetryDelayAvailable = i < retries - 1;
 
       if (!hasRetryDelayAvailable) {
-        logFetch(`FETCH_FAILED retries=${attempt} totalTime=${Date.now() - startTime}ms`);
+        logFetch(
+          `FETCH_FAILED retries=${attempt} totalTime=${Date.now() - startTime}ms cause=${errorMessage}`
+        );
         recordFetchEvent("FETCH_FAILED", Date.now());
         throw err;
       }
 
-      logFetch(`FETCH_RETRY_${attempt} duration=${duration}ms`);
+      logFetch(`FETCH_RETRY_${attempt} duration=${duration}ms cause=${errorMessage}`);
       recordFetchEvent(`FETCH_RETRY_${attempt}`, Date.now());
 
       const delayMs = delaysMs[Math.min(i, delaysMs.length - 1)];
