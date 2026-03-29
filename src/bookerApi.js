@@ -295,6 +295,49 @@ async function pollReservationDetailsDiagnostic({
     }
   }
 
+  const firstHttp200Result =
+    pollResults.find((entry) => entry.status === 200) || null;
+  const firstPlaceReservedResult =
+    pollResults.find(
+      (entry) => entry?.parsed?.status?.status === "PLACE_RESERVED"
+    ) || null;
+  const firstInvoiceResult =
+    pollResults.find((entry) => entry?.parsed?.invoice != null) || null;
+  const successfulResults = pollResults.filter((entry) => entry.status === 200);
+  const lastSuccessfulResult =
+    successfulResults.length > 0
+      ? successfulResults[successfulResults.length - 1]
+      : null;
+  const firstHttp200Attempt = firstHttp200Result
+    ? firstHttp200Result.attempt
+    : null;
+  const firstPlaceReservedAttempt = firstPlaceReservedResult
+    ? firstPlaceReservedResult.attempt
+    : null;
+  const firstInvoiceAttempt = firstInvoiceResult
+    ? firstInvoiceResult.attempt
+    : null;
+  const finalReservationStatus =
+    lastSuccessfulResult?.parsed?.status?.status ?? null;
+  const finalHasInvoice = lastSuccessfulResult
+    ? lastSuccessfulResult?.parsed?.invoice != null
+    : null;
+  const successfulAttemptsCount = successfulResults.length;
+  const notFound422Count = pollResults.filter(
+    (entry) => entry.status === 422
+  ).length;
+
+  console.log("=== RESERVATION DETAILS SUMMARY ===");
+  console.log("reservationId:", reservationId);
+  console.log("firstHttp200Attempt:", firstHttp200Attempt);
+  console.log("firstPlaceReservedAttempt:", firstPlaceReservedAttempt);
+  console.log("firstInvoiceAttempt:", firstInvoiceAttempt);
+  console.log("finalReservationStatus:", finalReservationStatus);
+  console.log("finalHasInvoice:", finalHasInvoice);
+  console.log("successfulAttemptsCount:", successfulAttemptsCount);
+  console.log("notFound422Count:", notFound422Count);
+  console.log("===================================");
+
   writeDiagnosticEvent({
     source: "API",
     kind: "reservation-details-polling-summary",
