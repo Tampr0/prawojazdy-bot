@@ -404,29 +404,68 @@
         ]
       },
       "raw": {
-        "allAttempts": 183,
-        "successAttempts": 151,
-        "wafAttempts": 32,
-        "fetchOkCount": 120,
-        "fetchRecoveredCount": 31,
-        "retry1Count": 31,
-        "retry2Count": 1,
-        "retry3Count": 0,
-        "retry4Count": 0,
+        "allAttempts": 470,
+        "successAttempts": 358,
+        "wafAttempts": 112,
+        "fetchOkCount": 270,
+        "fetchRecoveredCount": 88,
+        "retry1Count": 88,
+        "retry2Count": 14,
+        "retry3Count": 9,
+        "retry4Count": 1,
         "fetchFailedCount": 0,
-        "successIntervalSumMs": 2191908,
-        "successIntervalCount": 148
+        "successIntervalSumMs": 5417876,
+        "successIntervalCount": 354
       },
       "derived": {
-        "noWafPercent": 82.5136612021858,
-        "wafPercent": 17.48633879781421,
-        "retry1PercentOfWaf": 96.875,
-        "retry2PercentOfWaf": 3.125,
-        "retry3PercentOfWaf": 0,
-        "retry4PercentOfWaf": 0,
+        "noWafPercent": 76.17021276595744,
+        "wafPercent": 23.829787234042556,
+        "retry1PercentOfWaf": 78.57142857142857,
+        "retry2PercentOfWaf": 12.5,
+        "retry3PercentOfWaf": 8.035714285714286,
+        "retry4PercentOfWaf": 0.8928571428571428,
         "failedPercentOfWaf": 0,
-        "avgSuccessIntervalMs": 14810.18918918919,
-        "avgSuccessIntervalSec": 14.81018918918919
+        "avgSuccessIntervalMs": 15304.734463276836,
+        "avgSuccessIntervalSec": 15.304734463276837
+      }
+    },
+    "{\"pollIntervalMs\":13000,\"jitterMinMs\":0,\"jitterMaxMs\":2000,\"retryDelaysMs\":[5000,4000,4000,8000,10000]}": {
+      "config": {
+        "pollIntervalMs": 13000,
+        "jitterMinMs": 0,
+        "jitterMaxMs": 2000,
+        "retryDelaysMs": [
+          5000,
+          4000,
+          4000,
+          8000,
+          10000
+        ]
+      },
+      "raw": {
+        "allAttempts": 396,
+        "successAttempts": 310,
+        "wafAttempts": 86,
+        "fetchOkCount": 256,
+        "fetchRecoveredCount": 54,
+        "retry1Count": 56,
+        "retry2Count": 15,
+        "retry3Count": 13,
+        "retry4Count": 1,
+        "fetchFailedCount": 1,
+        "successIntervalSumMs": 4841009,
+        "successIntervalCount": 307
+      },
+      "derived": {
+        "noWafPercent": 78.28282828282829,
+        "wafPercent": 21.71717171717172,
+        "retry1PercentOfWaf": 65.11627906976744,
+        "retry2PercentOfWaf": 17.441860465116278,
+        "retry3PercentOfWaf": 15.11627906976744,
+        "retry4PercentOfWaf": 1.1627906976744187,
+        "failedPercentOfWaf": 1.1627906976744187,
+        "avgSuccessIntervalMs": 15768.758957654723,
+        "avgSuccessIntervalSec": 15.768758957654724
       }
     }
   }

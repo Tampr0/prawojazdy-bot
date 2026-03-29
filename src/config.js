@@ -6,7 +6,7 @@ dotenv.config();
 function getFetchTimingConfig() {
   return {
     pollIntervalMs: Number(process.env.POLL_INTERVAL_MS || 13000),
-    pollJitterMaxMs: Number(process.env.POLL_JITTER_MAX_MS || 1000),
+    pollJitterMaxMs: Number(process.env.POLL_JITTER_MAX_MS || 2000),
     fetchRetryDelaysMs: (process.env.FETCH_RETRY_DELAYS_MS || "5000,4000,4000,8000,10000")
       .split(",")
       .map((value) => Number(value.trim()))

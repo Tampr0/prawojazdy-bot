@@ -228,3 +228,10 @@ Call log:
     at async fetchWithRetry (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:143:22)
     at async runWatcher (C:\Users\kondo\Desktop\prawojazdy-bot\src\watcher.js:860:28)
 
+[2026-03-26T13:55:09] [ERROR] Blad podczas pobierania terminarza.
+[2026-03-26T13:55:09] [ERROR] Error: API returned 500: {"errors":[{"code":"Task org.springframework.cloud.sleuth.instrument.async.TraceRunnable@1cd7ec57 rejected from java.util.concurrent.ThreadPoolExecutor@46b02c2c[Running, pool size = 200, active threads = 200, queued tasks = 400, completed tasks = 17472783]","userMessage":"Task org.springframework.cloud.sleuth.instrument.async.TraceRunnable@1cd7ec57 rejected from java.util.concurrent.ThreadPoolExecutor@46b02c2c[Running, pool size = 200, active threads = 200, queued tasks = 400, completed tasks = 17472783]","timestamp":"2026-03-26T13:55:09.206805036"}]}
+    at fetchSchedule (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:115:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async fetchWithRetry (C:\Users\kondo\Desktop\prawojazdy-bot\src\checker.js:143:22)
+    at async runWatcher (C:\Users\kondo\Desktop\prawojazdy-bot\src\watcher.js:863:28)
+
