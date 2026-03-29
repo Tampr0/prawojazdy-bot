@@ -76,8 +76,12 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const RESERVATION_DETAILS_POLL_ATTEMPTS = 8;
+const RESERVATION_DETAILS_POLL_TIMEOUT_MS = 45000;
 const RESERVATION_DETAILS_POLL_INTERVAL_MS = 1000;
+
+function isTerminalReservationStatus(status) {
+  return status === "PLACE_RESERVED" || status === "CANCELLED";
+}
 
 function extractExpireTimeValue(parsed) {
   if (!parsed || typeof parsed !== "object") {
@@ -247,12 +251,12 @@ async function pollReservationDetailsDiagnostic({
 }) {
   const reservationDetailsUrl = `https://info-car.pl/api/word/reservations/${reservationId}`;
   const pollResults = [];
+  const startedAt = Date.now();
+  let attempt = 1;
+  let resolved = false;
+  let resolvedByStatus = null;
 
-  for (
-    let attempt = 1;
-    attempt <= RESERVATION_DETAILS_POLL_ATTEMPTS;
-    attempt += 1
-  ) {
+  while (Date.now() - startedAt < RESERVATION_DETAILS_POLL_TIMEOUT_MS) {
     if (typeof shouldAbort === "function" && shouldAbort()) {
       writeDiagnosticEvent({
         source: "API",
@@ -291,6 +295,9 @@ async function pollReservationDetailsDiagnostic({
       error: response.error ?? null,
     });
 
+    const currentReservationStatus =
+      response?.parsed?.status?.status ?? null;
+
     writeDiagnosticEvent({
       source: "API",
       kind: "reservation-details-polling-attempt",
@@ -313,9 +320,21 @@ async function pollReservationDetailsDiagnostic({
       note: "Reservation details polling attempt completed",
     });
 
-    if (attempt < RESERVATION_DETAILS_POLL_ATTEMPTS) {
-      await sleep(RESERVATION_DETAILS_POLL_INTERVAL_MS);
+    if (isTerminalReservationStatus(currentReservationStatus)) {
+      resolved = true;
+      resolvedByStatus = currentReservationStatus;
+      break;
     }
+
+    const elapsedMs = Date.now() - startedAt;
+    const remainingMs = RESERVATION_DETAILS_POLL_TIMEOUT_MS - elapsedMs;
+
+    if (remainingMs <= 0) {
+      break;
+    }
+
+    await sleep(Math.min(RESERVATION_DETAILS_POLL_INTERVAL_MS, remainingMs));
+    attempt += 1;
   }
 
   const firstHttp200Result =
@@ -356,6 +375,9 @@ async function pollReservationDetailsDiagnostic({
   const notFound422Count = pollResults.filter(
     (entry) => entry.status === 422
   ).length;
+  const attemptsPerformed = pollResults.length;
+  const timedOut =
+    !resolved && Date.now() - startedAt >= RESERVATION_DETAILS_POLL_TIMEOUT_MS;
   const validationOutcome =
     firstPlaceReservedAttempt !== null
       ? "SUCCESS"
@@ -368,8 +390,12 @@ async function pollReservationDetailsDiagnostic({
   console.log("firstHttp200Attempt:", firstHttp200Attempt);
   console.log("firstPlaceReservedAttempt:", firstPlaceReservedAttempt);
   console.log("firstInvoiceAttempt:", firstInvoiceAttempt);
+  console.log("attemptsPerformed:", attemptsPerformed);
   console.log("finalReservationStatus:", finalReservationStatus);
   console.log("finalHasInvoice:", finalHasInvoice);
+  console.log("resolved:", resolved);
+  console.log("resolvedByStatus:", resolvedByStatus);
+  console.log("timedOut:", timedOut);
   console.log("successfulAttemptsCount:", successfulAttemptsCount);
   console.log("notFound422Count:", notFound422Count);
   console.log("===================================");
@@ -380,8 +406,13 @@ async function pollReservationDetailsDiagnostic({
     method: "GET",
     url: reservationDetailsUrl,
     reservationId,
-    attempts: RESERVATION_DETAILS_POLL_ATTEMPTS,
+    timeoutMs: RESERVATION_DETAILS_POLL_TIMEOUT_MS,
+    attemptsPerformed,
+    attempts: attemptsPerformed,
     intervalMs: RESERVATION_DETAILS_POLL_INTERVAL_MS,
+    resolved,
+    resolvedByStatus,
+    timedOut,
     firstPlaceReservedAttempt,
     firstCancelledAttempt,
     validationOutcome,
@@ -399,8 +430,13 @@ async function pollReservationDetailsDiagnostic({
 
   return {
     pollResults,
-    attempts: RESERVATION_DETAILS_POLL_ATTEMPTS,
+    timeoutMs: RESERVATION_DETAILS_POLL_TIMEOUT_MS,
+    attemptsPerformed,
+    attempts: attemptsPerformed,
     intervalMs: RESERVATION_DETAILS_POLL_INTERVAL_MS,
+    resolved,
+    resolvedByStatus,
+    timedOut,
     firstPlaceReservedAttempt,
     firstCancelledAttempt,
     finalReservationStatus,
