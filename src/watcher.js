@@ -940,9 +940,8 @@ async function runWatcher() {
               slotToBook.time
             );
 
-            const result = await bookSlotAPI(session, slotToBook);
-
             singleReservationAttemptDone = true;
+            const result = await bookSlotAPI(session, slotToBook);
 
             const reservationId =
               result?.__diagnostics?.reservationId ||
