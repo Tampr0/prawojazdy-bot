@@ -382,6 +382,7 @@ async function pollReservationDetailsDiagnostic({
     reservationId,
     attempts: RESERVATION_DETAILS_POLL_ATTEMPTS,
     intervalMs: RESERVATION_DETAILS_POLL_INTERVAL_MS,
+    firstPlaceReservedAttempt,
     firstCancelledAttempt,
     validationOutcome,
     pollResults,

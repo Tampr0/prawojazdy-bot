@@ -933,8 +933,7 @@ async function runWatcher() {
 
           // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
-          if (!singleReservationAttemptDone && newSlots.length > 0) {
-            singleReservationAttemptDone = true;
+          if (newSlots.length > 0) {
             winningReservationId = null;
 
             const slotsToAttempt = newSlots;
