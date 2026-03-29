@@ -1,10 +1,13 @@
+Context/
 node_modules/
+pliki_moje/
+scripts/
+user-data/
+user-data-booker/
 .env
 state.json
 session.json
 debug-slots.json
 playwright-report/
 test-results/
-user-data/
-pliki_moje/
 seen-slots.json
