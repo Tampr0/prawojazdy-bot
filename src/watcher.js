@@ -2,7 +2,7 @@ const fs = require("fs/promises");
 const { getFetchTimingConfig, loadConfig } = require("./config");
 const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
-const { bookSlotAPI, pollExpireTimeDiagnostic } = require("./bookerApi");
+const { bookSlotAPI, pollReservationDetailsDiagnostic } = require("./bookerApi");
 const { logInfo, logError, logStatus, logFetchHeader } = require("./logger");
 const { ensureSession, getSessionPage, resetBrowser } = require("./session");
 const { saveJson } = require("./storage");
@@ -28,6 +28,7 @@ let globalBookingSuccess = false;
 let postSuccessCheckDone = false; // do testów czy termin jest widoczny dalej po zarezerwowaniu
 let bookingInProgress = false;
 let statusDots = "";
+let singleReservationAttemptDone = false;
 
 let burstWorkerStarted = false;
 let fightModeActive = false;
@@ -838,8 +839,6 @@ async function runWatcher() {
     retryDelays: fetchTimingConfig.fetchRetryDelaysMs,
   });
   startEventLine();
-  void runBookingBurstWorker(() => session);
-  void runReservationValidationWorker();
 
   while (true) {
     if (globalBookingSuccess) {
@@ -907,6 +906,7 @@ async function runWatcher() {
         }
 
         clearFightState();
+        singleReservationAttemptDone = false;
       } else {
         // const newSlots = filteredByRange.filter((slot) => {
         //   const key = buildSlotKey(slot);
@@ -930,15 +930,92 @@ async function runWatcher() {
 
           // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
-          const wasFightModeActive = fightModeActive;
-          updateFightState(newSlots);
+          if (!singleReservationAttemptDone && newSlots.length > 0) {
+            const slotToBook = newSlots[0];
 
-          if (!wasFightModeActive) {
-            resetCombatStatsForNewFight();
+            console.log(
+              "🎯 SINGLE BOOKING ATTEMPT:",
+              slotToBook.id,
+              slotToBook.date,
+              slotToBook.time
+            );
+
+            const result = await bookSlotAPI(session, slotToBook);
+
+            singleReservationAttemptDone = true;
+
+            const reservationId =
+              result?.__diagnostics?.reservationId ||
+              result?.id ||
+              null;
+
+            if (reservationId) {
+              const paymentUrl = buildPaymentUrlFromReservationId(reservationId);
+
+              console.log("💳 PAYMENT URL:", paymentUrl);
+
+              writeDiagnosticEvent({
+                source: "WATCHER",
+                kind: "single-booking-payment-url",
+                reservationId,
+                paymentUrl,
+                slot: {
+                  id: slotToBook.id,
+                  date: slotToBook.date,
+                  time: slotToBook.time,
+                  wordId: slotToBook.wordId,
+                  amount: slotToBook.amount ?? null,
+                  places: slotToBook.places ?? null,
+                },
+                note: "Built payment URL immediately after receiving reservationId without expire/time validation",
+              });
+
+              const diagnosticCookieHeader =
+                result?.__diagnostics?.diagnosticCookieHeader || null;
+
+              const reservationDetailsResult =
+                await pollReservationDetailsDiagnostic({
+                  session,
+                  slot: slotToBook,
+                  reservationId,
+                  cookieHeaderOverride: diagnosticCookieHeader,
+                });
+
+              writeDiagnosticEvent({
+                source: "WATCHER",
+                kind: "single-booking-reservation-details-finished",
+                reservationId,
+                paymentUrl,
+                slot: {
+                  id: slotToBook.id,
+                  date: slotToBook.date,
+                  time: slotToBook.time,
+                  wordId: slotToBook.wordId,
+                  amount: slotToBook.amount ?? null,
+                  places: slotToBook.places ?? null,
+                },
+                reservationDetailsResult,
+                note: "Finished repeated reservation details polling after single booking attempt",
+              });
+            } else {
+              console.log("BOOKING RESULT WITHOUT RESERVATION ID");
+
+              writeDiagnosticEvent({
+                source: "WATCHER",
+                kind: "single-booking-missing-reservation-id",
+                slot: {
+                  id: slotToBook.id,
+                  date: slotToBook.date,
+                  time: slotToBook.time,
+                  wordId: slotToBook.wordId,
+                  amount: slotToBook.amount ?? null,
+                  places: slotToBook.places ?? null,
+                },
+                bookingResult: result,
+                note: "Booking response did not include reservationId",
+              });
+            }
           }
-
-          startEventLine();
-          console.log(`🔥 FIGHT MODE ARMED | slots: ${newSlots.length}`);
         }
       }
 
@@ -959,6 +1036,7 @@ async function runWatcher() {
 
         await resetBrowser();   // 🔥 KLUCZOWE
         session = null;
+        singleReservationAttemptDone = false;
 
         continue;
       }
@@ -972,6 +1050,7 @@ async function runWatcher() {
 
           await resetBrowser();   // 🔥 DODAJ
           session = null;
+          singleReservationAttemptDone = false;
         }
 
         startEventLine();

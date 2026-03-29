@@ -76,6 +76,9 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const RESERVATION_DETAILS_POLL_ATTEMPTS = 4;
+const RESERVATION_DETAILS_POLL_INTERVAL_MS = 1000;
+
 function extractExpireTimeValue(parsed) {
   if (!parsed || typeof parsed !== "object") {
     return null;
@@ -232,6 +235,90 @@ async function pollExpireTimeDiagnostic({
     firstNonNullAttempt: firstNonNullResult
       ? firstNonNullResult.attempt
       : null,
+  };
+}
+
+async function pollReservationDetailsDiagnostic({
+  session,
+  slot,
+  reservationId,
+  cookieHeaderOverride,
+}) {
+  const reservationDetailsUrl = `https://info-car.pl/api/word/reservations/${reservationId}`;
+  const pollResults = [];
+
+  for (
+    let attempt = 1;
+    attempt <= RESERVATION_DETAILS_POLL_ATTEMPTS;
+    attempt += 1
+  ) {
+    const response = await runDiagnosticGet({
+      session,
+      slot,
+      url: reservationDetailsUrl,
+      label: `reservation-details-poll-${attempt}`,
+      cookieHeaderOverride,
+    });
+
+    pollResults.push({
+      attempt,
+      status: response.status,
+      ok: response.ok,
+      parsed: response.parsed ?? null,
+      error: response.error ?? null,
+    });
+
+    writeDiagnosticEvent({
+      source: "API",
+      kind: "reservation-details-polling-attempt",
+      method: "GET",
+      url: reservationDetailsUrl,
+      reservationId,
+      attempt,
+      status: response.status,
+      ok: response.ok,
+      parsedBody: redactBody(response.parsed),
+      errorMessage: response.error ?? null,
+      slot: {
+        id: slot.id,
+        date: slot.date,
+        time: slot.time,
+        wordId: slot.wordId,
+        amount: slot.amount ?? null,
+        places: slot.places ?? null,
+      },
+      note: "Reservation details polling attempt completed",
+    });
+
+    if (attempt < RESERVATION_DETAILS_POLL_ATTEMPTS) {
+      await sleep(RESERVATION_DETAILS_POLL_INTERVAL_MS);
+    }
+  }
+
+  writeDiagnosticEvent({
+    source: "API",
+    kind: "reservation-details-polling-summary",
+    method: "GET",
+    url: reservationDetailsUrl,
+    reservationId,
+    attempts: RESERVATION_DETAILS_POLL_ATTEMPTS,
+    intervalMs: RESERVATION_DETAILS_POLL_INTERVAL_MS,
+    pollResults,
+    slot: {
+      id: slot.id,
+      date: slot.date,
+      time: slot.time,
+      wordId: slot.wordId,
+      amount: slot.amount ?? null,
+      places: slot.places ?? null,
+    },
+    note: "Reservation details polling finished",
+  });
+
+  return {
+    pollResults,
+    attempts: RESERVATION_DETAILS_POLL_ATTEMPTS,
+    intervalMs: RESERVATION_DETAILS_POLL_INTERVAL_MS,
   };
 }
 
@@ -584,4 +671,5 @@ async function bookSlotAPI(session, slot) {
 module.exports = {
   bookSlotAPI,
   pollExpireTimeDiagnostic,
+  pollReservationDetailsDiagnostic,
 };

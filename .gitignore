@@ -5,9 +5,15 @@ scripts/
 user-data/
 user-data-booker/
 .env
+activity-log.jsonl
+activity-state.json
+booking-diagnostic.jsonl
+daily-report.json
+debug-after-success.json
+errors.log
+fetch-log.txt
+fetch-stats.json
 state.json
 session.json
 debug-slots.json
-playwright-report/
-test-results/
 seen-slots.json
