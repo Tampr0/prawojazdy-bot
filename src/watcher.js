@@ -17,6 +17,7 @@ const fetchTimingConfig = getFetchTimingConfig();
 
 const BOOKING_LOOP_DELAY_MS = 400; // delay between slot booking attempts inside one burst round
 const BOOKING_BURST_INTERVAL_MS = 500; // delay between booking rounds in background worker
+const PARALLEL_BOOKING_STAGGER_MS = 200;
 const FIGHT_MODE_TIMEOUT_MS = 15000; // stale fight mode timeout
 const MAX_ACTIVE_SLOT_VALIDATIONS = 2;
 const FETCH_FAILURE_COOLDOWN_MS = 30000;
@@ -29,6 +30,7 @@ let postSuccessCheckDone = false; // do testów czy termin jest widoczny dalej p
 let bookingInProgress = false;
 let statusDots = "";
 let singleReservationAttemptDone = false;
+let winningReservationId = null;
 
 let burstWorkerStarted = false;
 let fightModeActive = false;
@@ -907,6 +909,7 @@ async function runWatcher() {
 
         clearFightState();
         singleReservationAttemptDone = false;
+        winningReservationId = null;
       } else {
         // const newSlots = filteredByRange.filter((slot) => {
         //   const key = buildSlotKey(slot);
@@ -931,89 +934,200 @@ async function runWatcher() {
           // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
           if (!singleReservationAttemptDone && newSlots.length > 0) {
-            const slotToBook = newSlots[0];
-
-            console.log(
-              "🎯 SINGLE BOOKING ATTEMPT:",
-              slotToBook.id,
-              slotToBook.date,
-              slotToBook.time
-            );
-
             singleReservationAttemptDone = true;
-            const result = await bookSlotAPI(session, slotToBook);
+            winningReservationId = null;
 
-            const reservationId =
-              result?.__diagnostics?.reservationId ||
-              result?.id ||
-              null;
+            const slotsToAttempt = newSlots;
 
-            if (reservationId) {
-              const paymentUrl = buildPaymentUrlFromReservationId(reservationId);
+            console.log("🎯 PARALLEL BOOKING BATCH START:", slotsToAttempt.length);
 
-              console.log("💳 PAYMENT URL:", paymentUrl);
+            const tasks = slotsToAttempt.map((slot, index) => (async () => {
+              try {
+                await sleep(index * PARALLEL_BOOKING_STAGGER_MS);
 
-              writeDiagnosticEvent({
-                source: "WATCHER",
-                kind: "single-booking-payment-url",
-                reservationId,
-                paymentUrl,
-                slot: {
-                  id: slotToBook.id,
-                  date: slotToBook.date,
-                  time: slotToBook.time,
-                  wordId: slotToBook.wordId,
-                  amount: slotToBook.amount ?? null,
-                  places: slotToBook.places ?? null,
-                },
-                note: "Built payment URL immediately after receiving reservationId without expire/time validation",
-              });
+                if (globalBookingSuccess) {
+                  return {
+                    slotId: slot.id || null,
+                    reservationId: null,
+                    outcome: "INCONCLUSIVE",
+                  };
+                }
 
-              const diagnosticCookieHeader =
-                result?.__diagnostics?.diagnosticCookieHeader || null;
+                console.log("🎯 BOOKING SLOT:", slot.id, slot.date, slot.time);
 
-              const reservationDetailsResult =
-                await pollReservationDetailsDiagnostic({
-                  session,
-                  slot: slotToBook,
+                const result = await bookSlotAPI(session, slot);
+
+                const reservationId =
+                  result?.__diagnostics?.reservationId ||
+                  result?.id ||
+                  null;
+
+                if (!reservationId) {
+                  console.log("BOOKING RESULT WITHOUT RESERVATION ID");
+
+                  writeDiagnosticEvent({
+                    source: "WATCHER",
+                    kind: "parallel-booking-missing-reservation-id",
+                    slot: {
+                      id: slot.id,
+                      date: slot.date,
+                      time: slot.time,
+                      wordId: slot.wordId,
+                      amount: slot.amount ?? null,
+                      places: slot.places ?? null,
+                    },
+                    bookingResult: result,
+                    note: "Parallel booking response did not include reservationId",
+                  });
+
+                  return {
+                    slotId: slot.id || null,
+                    reservationId: null,
+                    outcome: "INCONCLUSIVE",
+                  };
+                }
+
+                const reservationDetailsResult =
+                  await pollReservationDetailsDiagnostic({
+                    session,
+                    slot,
+                    reservationId,
+                    cookieHeaderOverride:
+                      result?.__diagnostics?.diagnosticCookieHeader || null,
+                    shouldAbort: () =>
+                      globalBookingSuccess &&
+                      winningReservationId !== reservationId,
+                  });
+
+                const validationOutcome =
+                  reservationDetailsResult?.validationOutcome || "INCONCLUSIVE";
+
+                if (validationOutcome === "SUCCESS" && !globalBookingSuccess) {
+                  globalBookingSuccess = true;
+                  winningReservationId = reservationId;
+
+                  const paymentUrl =
+                    buildPaymentUrlFromReservationId(reservationId);
+
+                  console.log("💳 PAYMENT URL:", paymentUrl);
+
+                  writeDiagnosticEvent({
+                    source: "WATCHER",
+                    kind: "parallel-booking-success",
+                    reservationId,
+                    paymentUrl,
+                    slot: {
+                      id: slot.id,
+                      date: slot.date,
+                      time: slot.time,
+                      wordId: slot.wordId,
+                      amount: slot.amount ?? null,
+                      places: slot.places ?? null,
+                    },
+                    reservationDetailsResult,
+                    note: "Reservation validated as PLACE_RESERVED in parallel booking batch",
+                  });
+
+                  await sendTelegramMessage(
+                    `✅ REZERWACJA POTWIERDZONA
+
+📅 ${slot.date}
+⏰ ${slot.time}
+
+💳 LINK:
+${paymentUrl}`
+                  );
+
+                  return {
+                    slotId: slot.id || null,
+                    reservationId,
+                    outcome: "SUCCESS",
+                  };
+                }
+
+                if (validationOutcome === "FAILED") {
+                  writeDiagnosticEvent({
+                    source: "WATCHER",
+                    kind: "parallel-booking-cancelled",
+                    reservationId,
+                    slot: {
+                      id: slot.id,
+                      date: slot.date,
+                      time: slot.time,
+                      wordId: slot.wordId,
+                      amount: slot.amount ?? null,
+                      places: slot.places ?? null,
+                    },
+                    reservationDetailsResult,
+                    note: "Reservation validation ended with CANCELLED status",
+                  });
+
+                  return {
+                    slotId: slot.id || null,
+                    reservationId,
+                    outcome: "FAILED",
+                  };
+                }
+
+                writeDiagnosticEvent({
+                  source: "WATCHER",
+                  kind: "parallel-booking-inconclusive",
                   reservationId,
-                  cookieHeaderOverride: diagnosticCookieHeader,
+                  slot: {
+                    id: slot.id,
+                    date: slot.date,
+                    time: slot.time,
+                    wordId: slot.wordId,
+                    amount: slot.amount ?? null,
+                    places: slot.places ?? null,
+                  },
+                  reservationDetailsResult,
+                  note: "Reservation validation finished without PLACE_RESERVED or CANCELLED",
                 });
 
-              writeDiagnosticEvent({
-                source: "WATCHER",
-                kind: "single-booking-reservation-details-finished",
-                reservationId,
-                paymentUrl,
-                slot: {
-                  id: slotToBook.id,
-                  date: slotToBook.date,
-                  time: slotToBook.time,
-                  wordId: slotToBook.wordId,
-                  amount: slotToBook.amount ?? null,
-                  places: slotToBook.places ?? null,
-                },
-                reservationDetailsResult,
-                note: "Finished repeated reservation details polling after single booking attempt",
-              });
-            } else {
-              console.log("BOOKING RESULT WITHOUT RESERVATION ID");
+                return {
+                  slotId: slot.id || null,
+                  reservationId,
+                  outcome: "INCONCLUSIVE",
+                };
+              } catch (error) {
+                writeDiagnosticEvent({
+                  source: "WATCHER",
+                  kind: "parallel-booking-task-error",
+                  slot: {
+                    id: slot.id,
+                    date: slot.date,
+                    time: slot.time,
+                    wordId: slot.wordId,
+                    amount: slot.amount ?? null,
+                    places: slot.places ?? null,
+                  },
+                  errorMessage: String(error?.message || error),
+                  note: "Parallel booking task failed",
+                });
 
-              writeDiagnosticEvent({
-                source: "WATCHER",
-                kind: "single-booking-missing-reservation-id",
-                slot: {
-                  id: slotToBook.id,
-                  date: slotToBook.date,
-                  time: slotToBook.time,
-                  wordId: slotToBook.wordId,
-                  amount: slotToBook.amount ?? null,
-                  places: slotToBook.places ?? null,
-                },
-                bookingResult: result,
-                note: "Booking response did not include reservationId",
-              });
-            }
+                console.log(
+                  "PARALLEL BOOKING TASK ERROR:",
+                  String(error?.message || error)
+                );
+
+                return {
+                  slotId: slot.id || null,
+                  reservationId: null,
+                  outcome: "ERROR",
+                };
+              }
+            })());
+
+            const batchResults = await Promise.all(tasks);
+
+            writeDiagnosticEvent({
+              source: "WATCHER",
+              kind: "parallel-booking-batch-finished",
+              winningReservationId,
+              batchResults,
+              note: "Parallel booking batch finished",
+            });
           }
         }
       }
@@ -1036,6 +1150,7 @@ async function runWatcher() {
         await resetBrowser();   // 🔥 KLUCZOWE
         session = null;
         singleReservationAttemptDone = false;
+        winningReservationId = null;
 
         continue;
       }
@@ -1050,6 +1165,7 @@ async function runWatcher() {
           await resetBrowser();   // 🔥 DODAJ
           session = null;
           singleReservationAttemptDone = false;
+          winningReservationId = null;
         }
 
         startEventLine();

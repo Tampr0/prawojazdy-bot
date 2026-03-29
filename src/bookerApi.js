@@ -76,7 +76,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const RESERVATION_DETAILS_POLL_ATTEMPTS = 4;
+const RESERVATION_DETAILS_POLL_ATTEMPTS = 8;
 const RESERVATION_DETAILS_POLL_INTERVAL_MS = 1000;
 
 function extractExpireTimeValue(parsed) {
@@ -243,6 +243,7 @@ async function pollReservationDetailsDiagnostic({
   slot,
   reservationId,
   cookieHeaderOverride,
+  shouldAbort = null,
 }) {
   const reservationDetailsUrl = `https://info-car.pl/api/word/reservations/${reservationId}`;
   const pollResults = [];
@@ -252,6 +253,28 @@ async function pollReservationDetailsDiagnostic({
     attempt <= RESERVATION_DETAILS_POLL_ATTEMPTS;
     attempt += 1
   ) {
+    if (typeof shouldAbort === "function" && shouldAbort()) {
+      writeDiagnosticEvent({
+        source: "API",
+        kind: "reservation-details-polling-aborted",
+        method: "GET",
+        url: reservationDetailsUrl,
+        reservationId,
+        attempt,
+        slot: {
+          id: slot.id,
+          date: slot.date,
+          time: slot.time,
+          wordId: slot.wordId,
+          amount: slot.amount ?? null,
+          places: slot.places ?? null,
+        },
+        note: "Reservation details polling aborted because another reservation already won",
+      });
+
+      break;
+    }
+
     const response = await runDiagnosticGet({
       session,
       slot,
@@ -301,6 +324,10 @@ async function pollReservationDetailsDiagnostic({
     pollResults.find(
       (entry) => entry?.parsed?.status?.status === "PLACE_RESERVED"
     ) || null;
+  const firstCancelledResult =
+    pollResults.find(
+      (entry) => entry?.parsed?.status?.status === "CANCELLED"
+    ) || null;
   const firstInvoiceResult =
     pollResults.find((entry) => entry?.parsed?.invoice != null) || null;
   const successfulResults = pollResults.filter((entry) => entry.status === 200);
@@ -314,6 +341,9 @@ async function pollReservationDetailsDiagnostic({
   const firstPlaceReservedAttempt = firstPlaceReservedResult
     ? firstPlaceReservedResult.attempt
     : null;
+  const firstCancelledAttempt = firstCancelledResult
+    ? firstCancelledResult.attempt
+    : null;
   const firstInvoiceAttempt = firstInvoiceResult
     ? firstInvoiceResult.attempt
     : null;
@@ -326,6 +356,12 @@ async function pollReservationDetailsDiagnostic({
   const notFound422Count = pollResults.filter(
     (entry) => entry.status === 422
   ).length;
+  const validationOutcome =
+    firstPlaceReservedAttempt !== null
+      ? "SUCCESS"
+      : firstCancelledAttempt !== null
+        ? "FAILED"
+        : "INCONCLUSIVE";
 
   console.log("=== RESERVATION DETAILS SUMMARY ===");
   console.log("reservationId:", reservationId);
@@ -346,6 +382,8 @@ async function pollReservationDetailsDiagnostic({
     reservationId,
     attempts: RESERVATION_DETAILS_POLL_ATTEMPTS,
     intervalMs: RESERVATION_DETAILS_POLL_INTERVAL_MS,
+    firstCancelledAttempt,
+    validationOutcome,
     pollResults,
     slot: {
       id: slot.id,
@@ -362,6 +400,10 @@ async function pollReservationDetailsDiagnostic({
     pollResults,
     attempts: RESERVATION_DETAILS_POLL_ATTEMPTS,
     intervalMs: RESERVATION_DETAILS_POLL_INTERVAL_MS,
+    firstPlaceReservedAttempt,
+    firstCancelledAttempt,
+    finalReservationStatus,
+    validationOutcome,
   };
 }
 
