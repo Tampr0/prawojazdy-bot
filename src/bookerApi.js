@@ -264,7 +264,7 @@ async function pollReservationDetailsDiagnostic({
       attempt,
       status: response.status,
       ok: response.ok,
-      parsed: response.parsed ?? null,
+      parsed: redactBody(response.parsed ?? null),
       error: response.error ?? null,
     });
 
