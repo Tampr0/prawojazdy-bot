@@ -23,6 +23,38 @@ function extractBearerToken(authorizationHeader) {
   return match ? match[1] : null;
 }
 
+function sanitizeSingleLine(value) {
+  return String(value ?? "")
+    .replace(/[\r\n]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildBodyPreview(value, maxLength = 300) {
+  const sanitized = sanitizeSingleLine(value);
+
+  if (sanitized.length <= maxLength) {
+    return sanitized;
+  }
+
+  return `${sanitized.slice(0, maxLength)}...`;
+}
+
+function formatFetchErrorDiagnostics(err) {
+  const parts = [
+    ["message", err?.message],
+    ["name", err?.name],
+    ["code", err?.code],
+    ["causeMessage", err?.cause?.message],
+    ["causeName", err?.cause?.name],
+    ["causeCode", err?.cause?.code],
+  ]
+    .filter(([, value]) => value != null && String(value) !== "")
+    .map(([key, value]) => `${key}=${sanitizeSingleLine(value)}`);
+
+  return parts.join(" | ");
+}
+
 async function captureSession(config) {
   const browserType = resolveBrowser(config.browserName);
 
@@ -103,29 +135,41 @@ async function fetchSchedule(session, payload, config) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    const bodyPreview = buildBodyPreview(errorText);
 
     if (
       errorText.trimStart().startsWith("<") ||
       errorText.includes("login") ||
       errorText.includes("logowanie")
     ) {
-      throw new Error("SESSION_EXPIRED_HTML");
+      throw new Error(`SESSION_EXPIRED_HTML bodyPreview=${bodyPreview}`);
     }
 
-    throw new Error(`API returned ${response.status}: ${errorText}`);
+    throw new Error(
+      `API_HTTP_ERROR status=${response.status} statusText=${sanitizeSingleLine(
+        response.statusText || ""
+      )} bodyPreview=${bodyPreview}`
+    );
   }
 
   const text = await response.text();
+  const bodyPreview = buildBodyPreview(text);
 
   if (
     text.trimStart().startsWith("<") ||
     text.includes("login") ||
     text.includes("logowanie")
   ) {
-    throw new Error("SESSION_EXPIRED_HTML");
+    throw new Error(`SESSION_EXPIRED_HTML bodyPreview=${bodyPreview}`);
   }
 
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(`API_JSON_PARSE_ERROR bodyPreview=${bodyPreview}`, {
+      cause: error,
+    });
+  }
 }
 
 const { logFetch } = require("./logger");
@@ -158,7 +202,7 @@ async function fetchWithRetry(fn, retries = getFetchTimingConfig().fetchRetryDel
       attempt++;
 
       const duration = Date.now() - attemptStart;
-      const errorMessage = String(err?.message || err).replace(/[\r\n]+/g, " ");
+      const errorMessage = formatFetchErrorDiagnostics(err);
       const hasRetryDelayAvailable = i < retries - 1;
 
       if (!hasRetryDelayAvailable) {
