@@ -31,6 +31,7 @@ let bookingInProgress = false;
 let statusDots = "";
 let singleReservationAttemptDone = false;
 let winningReservationId = null;
+let bookingBatchRotationOffset = 0;
 
 let burstWorkerStarted = false;
 let fightModeActive = false;
@@ -51,6 +52,15 @@ function getNextInterval() {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function rotateSlots(slots, offset) {
+  if (!Array.isArray(slots) || slots.length === 0) {
+    return [];
+  }
+
+  const normalizedOffset = ((offset % slots.length) + slots.length) % slots.length;
+  return [...slots.slice(normalizedOffset), ...slots.slice(0, normalizedOffset)];
 }
 
 function buildPayload() {
@@ -910,6 +920,7 @@ async function runWatcher() {
         clearFightState();
         singleReservationAttemptDone = false;
         winningReservationId = null;
+        bookingBatchRotationOffset = 0;
       } else {
         // const newSlots = filteredByRange.filter((slot) => {
         //   const key = buildSlotKey(slot);
@@ -936,9 +947,14 @@ async function runWatcher() {
           if (newSlots.length > 0) {
             winningReservationId = null;
 
-            const slotsToAttempt = newSlots;
+            const slotsToAttempt = rotateSlots(newSlots, bookingBatchRotationOffset);
 
-            console.log("🎯 PARALLEL BOOKING BATCH START:", slotsToAttempt.length);
+            console.log(
+              "🎯 PARALLEL BOOKING BATCH START:",
+              slotsToAttempt.length,
+              "| rotationOffset:",
+              bookingBatchRotationOffset
+            );
 
             const tasks = slotsToAttempt.map((slot, index) => (async () => {
               try {
@@ -1120,6 +1136,11 @@ ${paymentUrl}`
 
             const batchResults = await Promise.all(tasks);
 
+            if (!globalBookingSuccess && newSlots.length > 0) {
+              bookingBatchRotationOffset =
+                (bookingBatchRotationOffset + 1) % newSlots.length;
+            }
+
             writeDiagnosticEvent({
               source: "WATCHER",
               kind: "parallel-booking-batch-finished",
@@ -1150,6 +1171,7 @@ ${paymentUrl}`
         session = null;
         singleReservationAttemptDone = false;
         winningReservationId = null;
+        bookingBatchRotationOffset = 0;
 
         continue;
       }
@@ -1165,6 +1187,7 @@ ${paymentUrl}`
           session = null;
           singleReservationAttemptDone = false;
           winningReservationId = null;
+          bookingBatchRotationOffset = 0;
         }
 
         startEventLine();
