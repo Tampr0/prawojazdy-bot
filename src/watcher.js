@@ -202,6 +202,7 @@ function formatFetchStatsForStatus() {
   const derived = liveStats?.derived || {};
 
   return [
+    `avg:${Number(derived.avgSuccessIntervalSec || 0).toFixed(1)}s`,
     `ALL:${Number(raw.allAttempts || 0)}`,
     `noWAF:${Number(derived.noWafPercent || 0).toFixed(1)}%`,
     `R1:${Math.round(Number(derived.retry1PercentOfWaf || 0))}%(${Number(raw.retry1Count || 0)})`,
@@ -209,7 +210,6 @@ function formatFetchStatsForStatus() {
     `R3:${Math.round(Number(derived.retry3PercentOfWaf || 0))}%(${Number(raw.retry3Count || 0)})`,
     `R4:${Math.round(Number(derived.retry4PercentOfWaf || 0))}%(${Number(raw.retry4Count || 0)})`,
     `FAIL:${Math.round(Number(derived.failedPercentOfWaf || 0))}%(${Number(raw.fetchFailedCount || 0)})`,
-    `avg:${Number(derived.avgSuccessIntervalSec || 0).toFixed(1)}s`,
   ].join(" | ");
 }
 
@@ -906,7 +906,7 @@ async function runWatcher() {
         minute: "2-digit",
         second: "2-digit",
       });
-      const status = `STATUS${getDots()} | ${statusTime} | slots: ${filteredByRange.length} | session: ${session ? "OK" : "NO"} | ${formatFetchStatsForStatus()}`;
+      const status = `STATUS${getDots()} | ${statusTime} | session: ${session ? "OK" : "NO"} | ${formatFetchStatsForStatus()}`;
       logStatus(status);
 
       if (filteredByRange.length === 0) {
