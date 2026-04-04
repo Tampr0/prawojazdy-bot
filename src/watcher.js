@@ -864,6 +864,24 @@ async function runWatcher() {
         startEventLine();
         console.log("NO SESSION -> creating...");
         session = await ensureSession(config);
+
+        if (
+          !session ||
+          typeof session.bearerToken !== "string" ||
+          session.bearerToken.length === 0 ||
+          !Array.isArray(session.cookies)
+        ) {
+          startEventLine();
+          logError("SESSION INVALID AFTER CAPTURE -> HARD RESET");
+          await resetBrowser();
+          session = null;
+          singleReservationAttemptDone = false;
+          winningReservationId = null;
+          bookingBatchRotationOffset = 0;
+          await sleep(1000);
+          continue;
+        }
+
         startEventLine();
         console.log("SESSION READY");
         console.log(`WARMUP WAIT -> first fetch in ${fetchTimingConfig.pollIntervalMs}ms`);
@@ -1159,6 +1177,7 @@ ${paymentUrl}`
       if (
         errorMessage.includes("401") ||
         errorMessage.includes("403") ||
+        errorMessage.includes("SESSION_MISSING") ||
         errorMessage.includes("SESSION_EXPIRED_HTML") ||
         errorMessage.includes("<!DOCTYPE html") ||
         errorMessage.includes("<html")

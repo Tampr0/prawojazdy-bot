@@ -330,6 +330,24 @@ async function fillVisible(page, selectors, value, timeout = 30000) {
   throw new Error("Nie znaleziono pola formularza logowania.");
 }
 
+async function isLoginFormVisible(page) {
+  const candidates = [
+    page.getByLabel(/login|e-mail|email/i).first(),
+    page.getByPlaceholder(/login|e-mail|email/i).first(),
+    page.locator('input[type="text"]').first(),
+    page.locator('input[type="email"]').first(),
+    page.locator('input[type="password"]').first(),
+  ];
+
+  for (const locator of candidates) {
+    if (await isLocatorVisible(locator)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 async function submitLoginForm(page, timeout = 30000) {
   const candidates = [
     page.locator('form button[type="submit"]').first(),
@@ -476,6 +494,18 @@ async function loginAndCaptureSession(config = loadConfig()) {
       await clickVisible(page, "Zaloguj");
     }
 
+    if (!(await isLoginFormVisible(page))) {
+      console.log("LOGIN FORM NOT VISIBLE -> RETRY FROM APP ENTRY");
+      await page.goto("https://info-car.pl/new");
+      await page.waitForTimeout(1000);
+      await clickVisible(page, "Zaloguj");
+    }
+
+    if (!(await isLoginFormVisible(page))) {
+      console.log("LOGIN FORM STILL NOT VISIBLE -> SESSION CAPTURE ABORT");
+      return null;
+    }
+
     console.log("FILL LOGIN");
     await fillVisible(
       page,
@@ -584,6 +614,13 @@ async function loginAndCaptureSession(config = loadConfig()) {
     return session;
   } catch (err) {
     console.error("SESSION FLOW ERROR:", err);
+    console.error(
+      "SESSION FLOW CONTEXT:",
+      "url=",
+      page && !page.isClosed() ? page.url() : "PAGE_CLOSED",
+      "| title=",
+      page && !page.isClosed() ? await page.title().catch(() => "TITLE_UNAVAILABLE") : "TITLE_UNAVAILABLE"
+    );
     return null;
   }
 }

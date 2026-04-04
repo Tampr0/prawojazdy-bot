@@ -117,6 +117,14 @@ async function captureSession(config) {
 }
 
 async function fetchSchedule(session, payload, config) {
+  if (
+    !session ||
+    !Array.isArray(session.cookies) ||
+    !session.bearerToken
+  ) {
+    throw new Error("SESSION_MISSING");
+  }
+
   const cookieHeader = (session.cookies || [])
     .map((cookie) => `${cookie.name}=${cookie.value}`)
     .join("; ");
