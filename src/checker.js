@@ -55,6 +55,21 @@ function formatFetchErrorDiagnostics(err) {
   return parts.join(" | ");
 }
 
+function createErrorWithCode(message, code, extra = {}) {
+  const error = new Error(message);
+  error.code = code;
+  Object.assign(error, extra);
+  return error;
+}
+
+function isImmediateSessionRefreshError(error) {
+  return (
+    error?.code === "SESSION_INVALID_STATUS" ||
+    error?.code === "SESSION_INVALID_HTML" ||
+    error?.code === "SESSION_MISSING"
+  );
+}
+
 async function captureSession(config) {
   const browserType = resolveBrowser(config.browserName);
 
@@ -122,7 +137,7 @@ async function fetchSchedule(session, payload, config) {
     !Array.isArray(session.cookies) ||
     !session.bearerToken
   ) {
-    throw new Error("SESSION_MISSING");
+    throw createErrorWithCode("SESSION_MISSING", "SESSION_MISSING");
   }
 
   const cookieHeader = (session.cookies || [])
@@ -147,10 +162,25 @@ async function fetchSchedule(session, payload, config) {
 
     if (
       errorText.trimStart().startsWith("<") ||
+      errorText.includes("Request Rejected") ||
       errorText.includes("login") ||
       errorText.includes("logowanie")
     ) {
-      throw new Error(`SESSION_EXPIRED_HTML bodyPreview=${bodyPreview}`);
+      throw createErrorWithCode(
+        `SESSION_EXPIRED_HTML bodyPreview=${bodyPreview}`,
+        "SESSION_INVALID_HTML",
+        { status: response.status }
+      );
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      throw createErrorWithCode(
+        `API_HTTP_ERROR status=${response.status} statusText=${sanitizeSingleLine(
+          response.statusText || ""
+        )} bodyPreview=${bodyPreview}`,
+        "SESSION_INVALID_STATUS",
+        { status: response.status }
+      );
     }
 
     throw new Error(
@@ -165,10 +195,14 @@ async function fetchSchedule(session, payload, config) {
 
   if (
     text.trimStart().startsWith("<") ||
+    text.includes("Request Rejected") ||
     text.includes("login") ||
     text.includes("logowanie")
   ) {
-    throw new Error(`SESSION_EXPIRED_HTML bodyPreview=${bodyPreview}`);
+    throw createErrorWithCode(
+      `SESSION_EXPIRED_HTML bodyPreview=${bodyPreview}`,
+      "SESSION_INVALID_HTML"
+    );
   }
 
   try {
@@ -211,6 +245,14 @@ async function fetchWithRetry(fn, retries = getFetchTimingConfig().fetchRetryDel
 
       const duration = Date.now() - attemptStart;
       const errorMessage = formatFetchErrorDiagnostics(err);
+
+      if (isImmediateSessionRefreshError(err)) {
+        logFetch(
+          `FETCH_SESSION_REFRESH_REQUIRED duration=${duration}ms cause=${errorMessage}`
+        );
+        throw err;
+      }
+
       const hasRetryDelayAvailable = i < retries - 1;
 
       if (!hasRetryDelayAvailable) {

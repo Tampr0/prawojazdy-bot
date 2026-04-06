@@ -47,6 +47,9 @@ function loadConfig() {
     pollIntervalMs: fetchTiming.pollIntervalMs,
     pollJitterMaxMs: fetchTiming.pollJitterMaxMs,
     fetchRetryDelaysMs: fetchTiming.fetchRetryDelaysMs,
+    sessionRefreshIntervalMs: Number(
+      process.env.SESSION_REFRESH_INTERVAL_MS || 50 * 60 * 1000
+    ),
     debug: process.env.DEBUG === "true",
     bookingDiagnostics: process.env.BOOKING_DIAGNOSTICS === "true",
     bookingDiagnosticsFilePath: path.resolve(

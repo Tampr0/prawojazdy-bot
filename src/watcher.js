@@ -3,8 +3,13 @@ const { getFetchTimingConfig, loadConfig } = require("./config");
 const { fetchSchedule, fetchWithRetry } = require("./checker");
 const { runBooker } = require("./booker");
 const { bookSlotAPI, pollReservationDetailsDiagnostic } = require("./bookerApi");
-const { logInfo, logError, logStatus, logFetchHeader } = require("./logger");
-const { ensureSession, getSessionPage, resetBrowser } = require("./session");
+const { logInfo, logError, logStatus, logFetchHeader, logFetch } = require("./logger");
+const {
+  ensureSession,
+  getSessionPage,
+  resetBrowser,
+  shouldRefreshSession,
+} = require("./session");
 const { saveJson } = require("./storage");
 const { sendTelegramMessage } = require("./notifier");
 const activityTracker = require("./activityTracker");
@@ -832,6 +837,58 @@ async function runWatcher() {
   let session = null;
   let consecutiveFetchFailures = 0;
 
+  function clearSessionDependentState() {
+    singleReservationAttemptDone = false;
+    winningReservationId = null;
+    bookingBatchRotationOffset = 0;
+  }
+
+  function isValidSessionShape(sessionToValidate) {
+    return Boolean(
+      sessionToValidate &&
+      typeof sessionToValidate.bearerToken === "string" &&
+      sessionToValidate.bearerToken.length > 0 &&
+      Array.isArray(sessionToValidate.cookies)
+    );
+  }
+
+  async function refreshSessionNow(reason, { hardReset }) {
+    logInfo(reason);
+    logFetch(`SESSION_REFRESH_START reason=${reason} hardReset=${hardReset}`);
+
+    if (hardReset) {
+      await resetBrowser();
+    }
+
+    clearSessionDependentState();
+
+    try {
+      const refreshedSession = await ensureSession(config, { forceRefresh: true });
+
+      if (!isValidSessionShape(refreshedSession)) {
+        throw new Error("SESSION_REFRESH_INVALID_SHAPE");
+      }
+
+      session = refreshedSession;
+      logFetch(`SESSION_REFRESH_SUCCESS reason=${reason}`);
+
+      if (reason === "PROACTIVE SESSION REFRESH START") {
+        logInfo("PROACTIVE SESSION REFRESH SUCCESS");
+      }
+
+      return true;
+    } catch (refreshError) {
+      session = null;
+      logError("SESSION REFRESH FAILED", refreshError);
+      logFetch(
+        `SESSION_REFRESH_FAILED reason=${reason} cause=${String(
+          refreshError?.message || refreshError
+        ).replace(/[\r\n]+/g, " ")}`
+      );
+      return false;
+    }
+  }
+
   sentSlots.clear();
 
   for (const slotKey of loadedSlots) {
@@ -849,6 +906,7 @@ async function runWatcher() {
     pollInterval: fetchTimingConfig.pollIntervalMs,
     pollJitterMaxMs: fetchTimingConfig.pollJitterMaxMs,
     retryDelays: fetchTimingConfig.fetchRetryDelaysMs,
+    sessionRefreshIntervalMs: config.sessionRefreshIntervalMs,
   });
   startEventLine();
 
@@ -875,9 +933,7 @@ async function runWatcher() {
           logError("SESSION INVALID AFTER CAPTURE -> HARD RESET");
           await resetBrowser();
           session = null;
-          singleReservationAttemptDone = false;
-          winningReservationId = null;
-          bookingBatchRotationOffset = 0;
+          clearSessionDependentState();
           await sleep(1000);
           continue;
         }
@@ -886,6 +942,14 @@ async function runWatcher() {
         console.log("SESSION READY");
         console.log(`WARMUP WAIT -> first fetch in ${fetchTimingConfig.pollIntervalMs}ms`);
         await sleep(fetchTimingConfig.pollIntervalMs);
+      }
+
+      if (shouldRefreshSession(session, config.sessionRefreshIntervalMs)) {
+        startEventLine();
+
+        if (!(await refreshSessionNow("PROACTIVE SESSION REFRESH START", { hardReset: false }))) {
+          continue;
+        }
       }
 
       const payload = buildPayload();
@@ -936,9 +1000,7 @@ async function runWatcher() {
         }
 
         clearFightState();
-        singleReservationAttemptDone = false;
-        winningReservationId = null;
-        bookingBatchRotationOffset = 0;
+        clearSessionDependentState();
       } else {
         // const newSlots = filteredByRange.filter((slot) => {
         //   const key = buildSlotKey(slot);
@@ -1175,6 +1237,8 @@ ${paymentUrl}`
       const errorMessage = String(error?.message || error);
 
       if (
+        error?.code === "SESSION_INVALID_STATUS" ||
+        error?.code === "SESSION_INVALID_HTML" ||
         errorMessage.includes("401") ||
         errorMessage.includes("403") ||
         errorMessage.includes("SESSION_MISSING") ||
@@ -1184,13 +1248,14 @@ ${paymentUrl}`
       ) {
         startEventLine();
 
-        logError("SESSION EXPIRED DETECTED -> HARD RESET");
+        const refreshReason =
+          error?.status === 401 || errorMessage.includes("401")
+            ? "IMMEDIATE SESSION REFRESH AFTER 401"
+            : error?.status === 403 || errorMessage.includes("403")
+              ? "IMMEDIATE SESSION REFRESH AFTER 403"
+              : "IMMEDIATE SESSION REFRESH AFTER SESSION INVALIDATION";
 
-        await resetBrowser();   // 🔥 KLUCZOWE
-        session = null;
-        singleReservationAttemptDone = false;
-        winningReservationId = null;
-        bookingBatchRotationOffset = 0;
+        await refreshSessionNow(refreshReason, { hardReset: true });
 
         continue;
       }
@@ -1204,9 +1269,7 @@ ${paymentUrl}`
 
           await resetBrowser();   // 🔥 DODAJ
           session = null;
-          singleReservationAttemptDone = false;
-          winningReservationId = null;
-          bookingBatchRotationOffset = 0;
+          clearSessionDependentState();
         }
 
         startEventLine();

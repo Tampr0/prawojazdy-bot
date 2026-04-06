@@ -58,6 +58,7 @@ function logFetchHeader(config) {
 POLL_INTERVAL_MS=${config.pollInterval}
 POLL_JITTER_MAX_MS=${config.pollJitterMaxMs}
 RETRY_DELAYS_MS=${JSON.stringify(config.retryDelays)}
+SESSION_REFRESH_INTERVAL_MS=${config.sessionRefreshIntervalMs}
 
 ==================================================\n`;
 

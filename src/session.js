@@ -293,6 +293,28 @@ function isSessionFresh(session) {
   return Date.now() - capturedAtMs < SESSION_MAX_AGE_MS;
 }
 
+function getSessionAgeMs(session) {
+  if (!session || typeof session.capturedAt !== "string") {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const capturedAtMs = new Date(session.capturedAt).getTime();
+
+  if (Number.isNaN(capturedAtMs)) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return Date.now() - capturedAtMs;
+}
+
+function shouldRefreshSession(session, refreshIntervalMs) {
+  if (!isSessionShapeValid(session)) {
+    return true;
+  }
+
+  return getSessionAgeMs(session) >= refreshIntervalMs;
+}
+
 async function clickVisible(page, text, timeout = 30000) {
   const pattern = new RegExp(text, "i");
   const candidates = [
@@ -430,12 +452,15 @@ function isTokenExpired(session) {
   }
 }
 
-async function getValidSession(sessionFilePath) {
+async function getValidSession(
+  sessionFilePath,
+  refreshIntervalMs = loadConfig().sessionRefreshIntervalMs
+) {
   try {
     const session = await loadSession(sessionFilePath);
 
     if (
-      !isSessionShapeValid(session) ||
+      shouldRefreshSession(session, refreshIntervalMs) ||
       !isSessionFresh(session) ||
       isTokenExpired(session)
     ) {
@@ -633,7 +658,10 @@ async function ensureSession(config = loadConfig(), options = {}) {
   await acceptCookies(page);
 
   if (!forceRefresh) {
-    const existingSession = await getValidSession(config.sessionFilePath);
+    const existingSession = await getValidSession(
+      config.sessionFilePath,
+      config.sessionRefreshIntervalMs
+    );
 
     if (existingSession && (await isLoggedIn(page))) {
       return existingSession;
@@ -656,5 +684,7 @@ module.exports = {
   getSessionPage: () => (sharedPage && !sharedPage.isClosed() ? sharedPage : null),
   saveSession,
   loadSession,
+  getSessionAgeMs,
+  shouldRefreshSession,
   resetBrowser, // 🔥 DODANE
 };
