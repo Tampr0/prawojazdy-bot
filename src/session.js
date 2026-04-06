@@ -586,23 +586,11 @@ async function loginAndCaptureSession(config = loadConfig()) {
     }
 
     console.log("TRIGGERING REQUEST");
-    const requestPromise = page
-      .waitForRequest(
-        (request) =>
-          request.method() === "PUT" && request.url().includes("/exam-schedule"),
-        { timeout: 30000 }
-      )
-      .catch((error) => {
-        if (
-          page.isClosed() ||
-          /Target page, context or browser has been closed/i.test(error.message)
-        ) {
-          console.log("Page closed during session capture");
-          return null;
-        }
-
-        throw error;
-      });
+    const requestPromise = page.waitForRequest(
+      (request) =>
+        request.method() === "PUT" && request.url().includes("/exam-schedule"),
+      { timeout: 30000 }
+    );
 
     await triggerExamScheduleRequest(page);
 
@@ -611,7 +599,33 @@ async function loginAndCaptureSession(config = loadConfig()) {
       return null;
     }
 
-    const request = await requestPromise;
+    let request;
+
+    try {
+      request = await requestPromise;
+    } catch (error) {
+      if (
+        page.isClosed() ||
+        /Target page, context or browser has been closed/i.test(error.message)
+      ) {
+        console.log("Page closed during session capture");
+        return null;
+      }
+
+      if (/Timeout/i.test(error.name) || /Timeout/i.test(error.message)) {
+        console.log("SESSION REQUEST TIMEOUT -> CAPTURE FAILED");
+        console.log(
+          "SESSION REQUEST TIMEOUT CONTEXT:",
+          "url=",
+          page && !page.isClosed() ? page.url() : "PAGE_CLOSED",
+          "| title=",
+          page && !page.isClosed() ? await page.title().catch(() => "TITLE_UNAVAILABLE") : "TITLE_UNAVAILABLE"
+        );
+        return null;
+      }
+
+      throw error;
+    }
 
     if (!request) {
       console.log("REQUEST NOT TRIGGERED");
