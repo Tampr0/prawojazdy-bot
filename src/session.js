@@ -586,23 +586,17 @@ async function loginAndCaptureSession(config = loadConfig()) {
     }
 
     console.log("TRIGGERING REQUEST");
-    const requestPromise = page.waitForRequest(
-      (request) =>
-        request.method() === "PUT" && request.url().includes("/exam-schedule"),
-      { timeout: 30000 }
-    );
-
-    await triggerExamScheduleRequest(page);
-
-    if (page.isClosed()) {
-      console.log("PAGE CLOSED - ABORT SESSION");
-      return null;
-    }
-
     let request;
 
     try {
-      request = await requestPromise;
+      [request] = await Promise.all([
+        page.waitForRequest(
+          (request) =>
+            request.method() === "PUT" && request.url().includes("/exam-schedule"),
+          { timeout: 30000 }
+        ),
+        triggerExamScheduleRequest(page),
+      ]);
     } catch (error) {
       if (
         page.isClosed() ||
@@ -625,6 +619,11 @@ async function loginAndCaptureSession(config = loadConfig()) {
       }
 
       throw error;
+    }
+
+    if (page.isClosed()) {
+      console.log("PAGE CLOSED - ABORT SESSION");
+      return null;
     }
 
     if (!request) {
