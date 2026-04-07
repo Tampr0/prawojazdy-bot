@@ -889,6 +889,235 @@ async function runWatcher() {
     }
   }
 
+  function getSlotsInConfiguredRange(practicalTerms, referenceNow = Date.now()) {
+    const minTs = referenceNow + config.slotMinDays * 24 * 60 * 60 * 1000;
+    const maxTs = referenceNow + config.slotMaxDays * 24 * 60 * 60 * 1000;
+
+    return practicalTerms.filter((slot) => {
+      const ts = new Date(slot.date).getTime();
+      return ts >= minTs && ts <= maxTs;
+    });
+  }
+
+  async function runSequentialBookingBatch(slots) {
+    winningReservationId = null;
+
+    const reversedSlots = [...slots].reverse();
+    const slotsToAttempt = rotateSlots(reversedSlots, bookingBatchRotationOffset);
+    const firstSlotToAttempt = slotsToAttempt[0] || null;
+
+    console.log(
+      "🎯 SEQUENTIAL BOOKING BATCH START:",
+      slotsToAttempt.length,
+      "| rotationOffset:",
+      bookingBatchRotationOffset,
+      "| firstSlot:",
+      firstSlotToAttempt ? firstSlotToAttempt.id : null,
+      firstSlotToAttempt ? firstSlotToAttempt.date : null,
+      firstSlotToAttempt ? firstSlotToAttempt.time : null
+    );
+
+    const batchResults = [];
+
+    for (const slot of slotsToAttempt) {
+      try {
+        if (globalBookingSuccess) {
+          batchResults.push({
+            slotId: slot.id || null,
+            reservationId: null,
+            outcome: "INCONCLUSIVE",
+          });
+          break;
+        }
+
+        console.log("🎯 BOOKING SLOT:", slot.id, slot.date, slot.time);
+
+        const result = await bookSlotAPI(session, slot);
+
+        const reservationId =
+          result?.__diagnostics?.reservationId ||
+          result?.id ||
+          null;
+
+        if (!reservationId) {
+          console.log("BOOKING RESULT WITHOUT RESERVATION ID");
+
+          writeDiagnosticEvent({
+            source: "WATCHER",
+            kind: "sequential-booking-missing-reservation-id",
+            slot: {
+              id: slot.id,
+              date: slot.date,
+              time: slot.time,
+              wordId: slot.wordId,
+              amount: slot.amount ?? null,
+              places: slot.places ?? null,
+            },
+            bookingResult: result,
+            note: "Sequential booking response did not include reservationId",
+          });
+
+          batchResults.push({
+            slotId: slot.id || null,
+            reservationId: null,
+            outcome: "INCONCLUSIVE",
+          });
+          continue;
+        }
+
+        const reservationDetailsResult =
+          await pollReservationDetailsDiagnostic({
+            session,
+            slot,
+            reservationId,
+            cookieHeaderOverride:
+              result?.__diagnostics?.diagnosticCookieHeader || null,
+            shouldAbort: () =>
+              globalBookingSuccess &&
+              winningReservationId !== reservationId,
+          });
+
+        const validationOutcome =
+          reservationDetailsResult?.validationOutcome || "INCONCLUSIVE";
+
+        if (validationOutcome === "SUCCESS" && !globalBookingSuccess) {
+          globalBookingSuccess = true;
+          winningReservationId = reservationId;
+
+          const paymentUrl =
+            buildPaymentUrlFromReservationId(reservationId);
+
+          console.log("💳 PAYMENT URL:", paymentUrl);
+
+          writeDiagnosticEvent({
+            source: "WATCHER",
+            kind: "sequential-booking-success",
+            reservationId,
+            paymentUrl,
+            slot: {
+              id: slot.id,
+              date: slot.date,
+              time: slot.time,
+              wordId: slot.wordId,
+              amount: slot.amount ?? null,
+              places: slot.places ?? null,
+            },
+            reservationDetailsResult,
+            note: "Reservation validated as PLACE_RESERVED in sequential booking batch",
+          });
+
+          await sendTelegramMessage(
+            `✅ REZERWACJA POTWIERDZONA
+
+📅 ${slot.date}
+⏰ ${slot.time}
+
+💳 LINK:
+${paymentUrl}`
+          );
+
+          batchResults.push({
+            slotId: slot.id || null,
+            reservationId,
+            outcome: "SUCCESS",
+          });
+          break;
+        }
+
+        if (validationOutcome === "FAILED") {
+          writeDiagnosticEvent({
+            source: "WATCHER",
+            kind: "sequential-booking-cancelled",
+            reservationId,
+            slot: {
+              id: slot.id,
+              date: slot.date,
+              time: slot.time,
+              wordId: slot.wordId,
+              amount: slot.amount ?? null,
+              places: slot.places ?? null,
+            },
+            reservationDetailsResult,
+            note: "Reservation validation ended with CANCELLED status",
+          });
+
+          batchResults.push({
+            slotId: slot.id || null,
+            reservationId,
+            outcome: "FAILED",
+          });
+          continue;
+        }
+
+        writeDiagnosticEvent({
+          source: "WATCHER",
+          kind: "sequential-booking-inconclusive",
+          reservationId,
+          slot: {
+            id: slot.id,
+            date: slot.date,
+            time: slot.time,
+            wordId: slot.wordId,
+            amount: slot.amount ?? null,
+            places: slot.places ?? null,
+          },
+          reservationDetailsResult,
+          note: "Reservation validation finished without PLACE_RESERVED or CANCELLED",
+        });
+
+        batchResults.push({
+          slotId: slot.id || null,
+          reservationId,
+          outcome: "INCONCLUSIVE",
+        });
+      } catch (error) {
+        writeDiagnosticEvent({
+          source: "WATCHER",
+          kind: "sequential-booking-task-error",
+          slot: {
+            id: slot.id,
+            date: slot.date,
+            time: slot.time,
+            wordId: slot.wordId,
+            amount: slot.amount ?? null,
+            places: slot.places ?? null,
+          },
+          errorMessage: String(error?.message || error),
+          note: "Sequential booking task failed",
+        });
+
+        console.log(
+          "SEQUENTIAL BOOKING TASK ERROR:",
+          String(error?.message || error)
+        );
+
+        batchResults.push({
+          slotId: slot.id || null,
+          reservationId: null,
+          outcome: "ERROR",
+        });
+      }
+    }
+
+    if (!globalBookingSuccess && slots.length > 0) {
+      bookingBatchRotationOffset =
+        (bookingBatchRotationOffset + 1) % slots.length;
+    }
+
+    writeDiagnosticEvent({
+      source: "WATCHER",
+      kind: "sequential-booking-batch-finished",
+      winningReservationId,
+      batchResults,
+      note: "Sequential booking batch finished",
+    });
+
+    return {
+      batchResults,
+      success: globalBookingSuccess,
+    };
+  }
+
   sentSlots.clear();
 
   for (const slotKey of loadedSlots) {
@@ -955,7 +1184,7 @@ async function runWatcher() {
       const payload = buildPayload();
       const responseData = await fetchWithRetry(() => fetchSchedule(session, payload, config));
       consecutiveFetchFailures = 0;
-      const practicalTerms = getPracticalTerms(responseData, payload);
+      let practicalTerms = getPracticalTerms(responseData, payload);
 
       void activityTracker.processSlots(practicalTerms);
 
@@ -976,13 +1205,7 @@ async function runWatcher() {
         });
       }
 
-      const minTs = now + config.slotMinDays * 24 * 60 * 60 * 1000;
-      const maxTs = now + config.slotMaxDays * 24 * 60 * 60 * 1000;
-
-      const filteredByRange = practicalTerms.filter((slot) => {
-        const ts = new Date(slot.date).getTime();
-        return ts >= minTs && ts <= maxTs;
-      });
+      const filteredByRange = getSlotsInConfiguredRange(practicalTerms, now);
       const statusTime = new Date().toLocaleTimeString("pl-PL", {
         hour: "2-digit",
         minute: "2-digit",
@@ -1025,217 +1248,53 @@ async function runWatcher() {
           // await saveSeenSlots(config.seenSlotsFilePath, sentSlots); // disabled for tests
 
           if (newSlots.length > 0) {
-            winningReservationId = null;
+            console.log("IMMEDIATE RETRY LOOP START");
 
-            const reversedSlots = [...newSlots].reverse();
-            const slotsToAttempt = rotateSlots(reversedSlots, bookingBatchRotationOffset);
-            const firstSlotToAttempt = slotsToAttempt[0] || null;
+            let retrySlots = newSlots;
 
-            console.log(
-              "🎯 SEQUENTIAL BOOKING BATCH START:",
-              slotsToAttempt.length,
-              "| rotationOffset:",
-              bookingBatchRotationOffset,
-              "| firstSlot:",
-              firstSlotToAttempt ? firstSlotToAttempt.id : null,
-              firstSlotToAttempt ? firstSlotToAttempt.date : null,
-              firstSlotToAttempt ? firstSlotToAttempt.time : null
-            );
+            while (retrySlots.length > 0 && !globalBookingSuccess) {
+              const batchResult = await runSequentialBookingBatch(retrySlots);
 
-            const batchResults = [];
+              if (batchResult.success || globalBookingSuccess) {
+                console.log("IMMEDIATE RETRY LOOP STOP | success");
+                break;
+              }
 
-            for (const slot of slotsToAttempt) {
-              try {
-                if (globalBookingSuccess) {
-                  batchResults.push({
-                    slotId: slot.id || null,
-                    reservationId: null,
-                    outcome: "INCONCLUSIVE",
-                  });
-                  break;
-                }
+              console.log("IMMEDIATE RETRY LOOP REFRESH");
 
-                console.log("🎯 BOOKING SLOT:", slot.id, slot.date, slot.time);
+              const retryPayload = buildPayload();
+              const retryResponseData = await fetchWithRetry(() =>
+                fetchSchedule(session, retryPayload, config)
+              );
+              consecutiveFetchFailures = 0;
+              practicalTerms = getPracticalTerms(retryResponseData, retryPayload);
 
-                const result = await bookSlotAPI(session, slot);
+              void activityTracker.processSlots(practicalTerms);
 
-                const reservationId =
-                  result?.__diagnostics?.reservationId ||
-                  result?.id ||
-                  null;
+              if (DEBUG) {
+                const retryNow = Date.now();
+                const retryMinTs = retryNow + config.slotMinDays * 24 * 60 * 60 * 1000;
+                const retryMaxTs = retryNow + config.slotMaxDays * 24 * 60 * 60 * 1000;
+                const retryMockTs = Math.floor((retryMinTs + retryMaxTs) / 2);
 
-                if (!reservationId) {
-                  console.log("BOOKING RESULT WITHOUT RESERVATION ID");
-
-                  writeDiagnosticEvent({
-                    source: "WATCHER",
-                    kind: "sequential-booking-missing-reservation-id",
-                    slot: {
-                      id: slot.id,
-                      date: slot.date,
-                      time: slot.time,
-                      wordId: slot.wordId,
-                      amount: slot.amount ?? null,
-                      places: slot.places ?? null,
-                    },
-                    bookingResult: result,
-                    note: "Sequential booking response did not include reservationId",
-                  });
-
-                  batchResults.push({
-                    slotId: slot.id || null,
-                    reservationId: null,
-                    outcome: "INCONCLUSIVE",
-                  });
-                  continue;
-                }
-
-                const reservationDetailsResult =
-                  await pollReservationDetailsDiagnostic({
-                    session,
-                    slot,
-                    reservationId,
-                    cookieHeaderOverride:
-                      result?.__diagnostics?.diagnosticCookieHeader || null,
-                    shouldAbort: () =>
-                      globalBookingSuccess &&
-                      winningReservationId !== reservationId,
-                  });
-
-                const validationOutcome =
-                  reservationDetailsResult?.validationOutcome || "INCONCLUSIVE";
-
-                if (validationOutcome === "SUCCESS" && !globalBookingSuccess) {
-                  globalBookingSuccess = true;
-                  winningReservationId = reservationId;
-
-                  const paymentUrl =
-                    buildPaymentUrlFromReservationId(reservationId);
-
-                  console.log("💳 PAYMENT URL:", paymentUrl);
-
-                  writeDiagnosticEvent({
-                    source: "WATCHER",
-                    kind: "sequential-booking-success",
-                    reservationId,
-                    paymentUrl,
-                    slot: {
-                      id: slot.id,
-                      date: slot.date,
-                      time: slot.time,
-                      wordId: slot.wordId,
-                      amount: slot.amount ?? null,
-                      places: slot.places ?? null,
-                    },
-                    reservationDetailsResult,
-                    note: "Reservation validated as PLACE_RESERVED in sequential booking batch",
-                  });
-
-                  await sendTelegramMessage(
-                    `✅ REZERWACJA POTWIERDZONA
-
-📅 ${slot.date}
-⏰ ${slot.time}
-
-💳 LINK:
-${paymentUrl}`
-                  );
-
-                  batchResults.push({
-                    slotId: slot.id || null,
-                    reservationId,
-                    outcome: "SUCCESS",
-                  });
-                  break;
-                }
-
-                if (validationOutcome === "FAILED") {
-                  writeDiagnosticEvent({
-                    source: "WATCHER",
-                    kind: "sequential-booking-cancelled",
-                    reservationId,
-                    slot: {
-                      id: slot.id,
-                      date: slot.date,
-                      time: slot.time,
-                      wordId: slot.wordId,
-                      amount: slot.amount ?? null,
-                      places: slot.places ?? null,
-                    },
-                    reservationDetailsResult,
-                    note: "Reservation validation ended with CANCELLED status",
-                  });
-
-                  batchResults.push({
-                    slotId: slot.id || null,
-                    reservationId,
-                    outcome: "FAILED",
-                  });
-                  continue;
-                }
-
-                writeDiagnosticEvent({
-                  source: "WATCHER",
-                  kind: "sequential-booking-inconclusive",
-                  reservationId,
-                  slot: {
-                    id: slot.id,
-                    date: slot.date,
-                    time: slot.time,
-                    wordId: slot.wordId,
-                    amount: slot.amount ?? null,
-                    places: slot.places ?? null,
-                  },
-                  reservationDetailsResult,
-                  note: "Reservation validation finished without PLACE_RESERVED or CANCELLED",
-                });
-
-                batchResults.push({
-                  slotId: slot.id || null,
-                  reservationId,
-                  outcome: "INCONCLUSIVE",
-                });
-              } catch (error) {
-                writeDiagnosticEvent({
-                  source: "WATCHER",
-                  kind: "sequential-booking-task-error",
-                  slot: {
-                    id: slot.id,
-                    date: slot.date,
-                    time: slot.time,
-                    wordId: slot.wordId,
-                    amount: slot.amount ?? null,
-                    places: slot.places ?? null,
-                  },
-                  errorMessage: String(error?.message || error),
-                  note: "Sequential booking task failed",
-                });
-
-                console.log(
-                  "SEQUENTIAL BOOKING TASK ERROR:",
-                  String(error?.message || error)
-                );
-
-                batchResults.push({
-                  slotId: slot.id || null,
-                  reservationId: null,
-                  outcome: "ERROR",
+                practicalTerms.unshift({
+                  id: "MOCK_" + Date.now(),
+                  date: new Date(retryMockTs).toISOString(),
+                  time: "08:00",
+                  wordId: "3",
+                  examType: "PRACTICAL",
+                  places: 1,
+                  amount: 222,
                 });
               }
-            }
 
-            if (!globalBookingSuccess && newSlots.length > 0) {
-              bookingBatchRotationOffset =
-                (bookingBatchRotationOffset + 1) % newSlots.length;
-            }
+              retrySlots = getSlotsInConfiguredRange(practicalTerms, Date.now());
 
-            writeDiagnosticEvent({
-              source: "WATCHER",
-              kind: "sequential-booking-batch-finished",
-              winningReservationId,
-              batchResults,
-              note: "Sequential booking batch finished",
-            });
+              if (retrySlots.length === 0) {
+                console.log("IMMEDIATE RETRY LOOP STOP | no slots");
+                break;
+              }
+            }
           }
         }
       }
