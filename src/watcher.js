@@ -1027,25 +1027,32 @@ async function runWatcher() {
           if (newSlots.length > 0) {
             winningReservationId = null;
 
-            const slotsToAttempt = rotateSlots(newSlots, bookingBatchRotationOffset);
+            const reversedSlots = [...newSlots].reverse();
+            const slotsToAttempt = rotateSlots(reversedSlots, bookingBatchRotationOffset);
+            const firstSlotToAttempt = slotsToAttempt[0] || null;
 
             console.log(
-              "🎯 PARALLEL BOOKING BATCH START:",
+              "🎯 SEQUENTIAL BOOKING BATCH START:",
               slotsToAttempt.length,
               "| rotationOffset:",
-              bookingBatchRotationOffset
+              bookingBatchRotationOffset,
+              "| firstSlot:",
+              firstSlotToAttempt ? firstSlotToAttempt.id : null,
+              firstSlotToAttempt ? firstSlotToAttempt.date : null,
+              firstSlotToAttempt ? firstSlotToAttempt.time : null
             );
 
-            const tasks = slotsToAttempt.map((slot, index) => (async () => {
-              try {
-                await sleep(index * PARALLEL_BOOKING_STAGGER_MS);
+            const batchResults = [];
 
+            for (const slot of slotsToAttempt) {
+              try {
                 if (globalBookingSuccess) {
-                  return {
+                  batchResults.push({
                     slotId: slot.id || null,
                     reservationId: null,
                     outcome: "INCONCLUSIVE",
-                  };
+                  });
+                  break;
                 }
 
                 console.log("🎯 BOOKING SLOT:", slot.id, slot.date, slot.time);
@@ -1062,7 +1069,7 @@ async function runWatcher() {
 
                   writeDiagnosticEvent({
                     source: "WATCHER",
-                    kind: "parallel-booking-missing-reservation-id",
+                    kind: "sequential-booking-missing-reservation-id",
                     slot: {
                       id: slot.id,
                       date: slot.date,
@@ -1072,14 +1079,15 @@ async function runWatcher() {
                       places: slot.places ?? null,
                     },
                     bookingResult: result,
-                    note: "Parallel booking response did not include reservationId",
+                    note: "Sequential booking response did not include reservationId",
                   });
 
-                  return {
+                  batchResults.push({
                     slotId: slot.id || null,
                     reservationId: null,
                     outcome: "INCONCLUSIVE",
-                  };
+                  });
+                  continue;
                 }
 
                 const reservationDetailsResult =
@@ -1108,7 +1116,7 @@ async function runWatcher() {
 
                   writeDiagnosticEvent({
                     source: "WATCHER",
-                    kind: "parallel-booking-success",
+                    kind: "sequential-booking-success",
                     reservationId,
                     paymentUrl,
                     slot: {
@@ -1120,7 +1128,7 @@ async function runWatcher() {
                       places: slot.places ?? null,
                     },
                     reservationDetailsResult,
-                    note: "Reservation validated as PLACE_RESERVED in parallel booking batch",
+                    note: "Reservation validated as PLACE_RESERVED in sequential booking batch",
                   });
 
                   await sendTelegramMessage(
@@ -1133,17 +1141,18 @@ async function runWatcher() {
 ${paymentUrl}`
                   );
 
-                  return {
+                  batchResults.push({
                     slotId: slot.id || null,
                     reservationId,
                     outcome: "SUCCESS",
-                  };
+                  });
+                  break;
                 }
 
                 if (validationOutcome === "FAILED") {
                   writeDiagnosticEvent({
                     source: "WATCHER",
-                    kind: "parallel-booking-cancelled",
+                    kind: "sequential-booking-cancelled",
                     reservationId,
                     slot: {
                       id: slot.id,
@@ -1157,16 +1166,17 @@ ${paymentUrl}`
                     note: "Reservation validation ended with CANCELLED status",
                   });
 
-                  return {
+                  batchResults.push({
                     slotId: slot.id || null,
                     reservationId,
                     outcome: "FAILED",
-                  };
+                  });
+                  continue;
                 }
 
                 writeDiagnosticEvent({
                   source: "WATCHER",
-                  kind: "parallel-booking-inconclusive",
+                  kind: "sequential-booking-inconclusive",
                   reservationId,
                   slot: {
                     id: slot.id,
@@ -1180,15 +1190,15 @@ ${paymentUrl}`
                   note: "Reservation validation finished without PLACE_RESERVED or CANCELLED",
                 });
 
-                return {
+                batchResults.push({
                   slotId: slot.id || null,
                   reservationId,
                   outcome: "INCONCLUSIVE",
-                };
+                });
               } catch (error) {
                 writeDiagnosticEvent({
                   source: "WATCHER",
-                  kind: "parallel-booking-task-error",
+                  kind: "sequential-booking-task-error",
                   slot: {
                     id: slot.id,
                     date: slot.date,
@@ -1198,23 +1208,21 @@ ${paymentUrl}`
                     places: slot.places ?? null,
                   },
                   errorMessage: String(error?.message || error),
-                  note: "Parallel booking task failed",
+                  note: "Sequential booking task failed",
                 });
 
                 console.log(
-                  "PARALLEL BOOKING TASK ERROR:",
+                  "SEQUENTIAL BOOKING TASK ERROR:",
                   String(error?.message || error)
                 );
 
-                return {
+                batchResults.push({
                   slotId: slot.id || null,
                   reservationId: null,
                   outcome: "ERROR",
-                };
+                });
               }
-            })());
-
-            const batchResults = await Promise.all(tasks);
+            }
 
             if (!globalBookingSuccess && newSlots.length > 0) {
               bookingBatchRotationOffset =
@@ -1223,10 +1231,10 @@ ${paymentUrl}`
 
             writeDiagnosticEvent({
               source: "WATCHER",
-              kind: "parallel-booking-batch-finished",
+              kind: "sequential-booking-batch-finished",
               winningReservationId,
               batchResults,
-              note: "Parallel booking batch finished",
+              note: "Sequential booking batch finished",
             });
           }
         }
